@@ -519,8 +519,10 @@ const image_directory rebuild_exports(pe_base& pe, const export_info& info, expo
 				needed_size_for_function_names += static_cast<uint32_t>(func.get_name().length() + 1);
 				
 				//Check if it's name and name ordinal are unique
-				if(!used_function_names.insert(func.get_name()).second)
-					throw pe_exception("Duplicate exported function name", pe_exception::duplicate_exported_function_name);
+				if (!used_function_names.insert(func.get_name()).second) {
+					//throw pe_exception("Duplicate exported function name", pe_exception::duplicate_exported_function_name);
+					exports.erase(it);
+				}
 			}
 
 			//If function is forwarded to another DLL

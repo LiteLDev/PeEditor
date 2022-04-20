@@ -35,8 +35,8 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; i++)
         CliArgs.insert(argv[i]);
     if (CliArgs.count("-h")) {
-        std::cout << "BDSLiteLoader SymDB2 Generator / PE ExportEditor For BDS" << std::endl
-            << "Usage: " << argv[0] << " [flag]" << std::endl
+        std::cout << "BDSLiteLoader PE Editor For BDS" << std::endl
+            << "Usage: " << argv[0] << " [flags,...]" << std::endl
             << "Flags: -noMod     Do not generate bedrock_server_mod.exe" << std::endl
             << "       -noSymDB   Do not generate bedrock_server.symdb2" << std::endl
             << "       -def       Generate def file for develop propose" << std::endl
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     bool mPause = CliArgs.count("-noPause")
         ? false
         : true;
-    std::cout << "[Info] LiteLoader ToolChain_SymDB_PEEditor" << std::endl;
+    std::cout << "[Info] LiteLoader ToolChain PEEditor" << std::endl;
     std::cout << "[Info] BuildDate CST " __TIMESTAMP__ << std::endl;
     std::cout << "[Info] Gen bedrock_server_mod.exe              " << std::boolalpha << std::string(mGenModBDS ? " true" : "false") << std::endl;
     std::cout << "[Info] Gen bedrock_server_mod.def        [DEV] " << std::boolalpha << std::string(mGenDevDef ? " true" : "false") << std::endl;
@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
         try {
             section ExportSection;
             ExportSection.get_raw_data().resize(1);
-            ExportSection.set_name("ExportFunc");
+            ExportSection.set_name("ExpFunc");
             ExportSection.readable(true);
             section& attachedExportedSection = OriginalBDS_PE->add_section(ExportSection);
             rebuild_exports(*OriginalBDS_PE, OriginalBDS_ExportInf, OriginalBDS_ExportFunc, attachedExportedSection);
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
 
             section ImportSection;
             ImportSection.get_raw_data().resize(1);
-            ImportSection.set_name("ImportFunc");
+            ImportSection.set_name("ImpFunc");
             ImportSection.readable(true).writeable(true);
             section& attachedImportedSection = OriginalBDS_PE->add_section(ImportSection);
             rebuild_imports(*OriginalBDS_PE, imports, attachedImportedSection, import_rebuilder_settings(true,false));
@@ -271,8 +271,14 @@ int main(int argc, char** argv) {
             catch (...) {
             }
         }
-        catch (...) {
+        catch (pe_exception e) {
             std::cout << "[Error] Failed to rebuild bedrock_server_mod.exe" << std::endl;
+            std::cout << "[Error] " << e.what() << std::endl;
+            ModifiedBDS.close();
+            std::filesystem::remove(std::filesystem::path("bedrock_server_mod.exe"));
+        }
+        catch (...) {
+            std::cout << "[Error] Failed to rebuild bedrock_server_mod.exe with unk err" << std::endl;
             ModifiedBDS.close();
             std::filesystem::remove(std::filesystem::path("bedrock_server_mod.exe"));
         }
