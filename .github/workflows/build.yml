@@ -35,5 +35,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: LiteLoader
+          name: ToolChain_PE_Editor
           path: ${{ github.workspace }}\Upload
