@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LLPeEditor", "LLPeEditor\LLPeEditor.vcxproj", "{5DA5CF8D-786C-4898-A6C6-DFFB47E845D9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94100F10-3854-4BCD-B0E3-7580C3362BF4} = {94100F10-3854-4BCD-B0E3-7580C3362BF4}
+		{F1841183-5E55-40D1-A013-7498264757D5} = {F1841183-5E55-40D1-A013-7498264757D5}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PortableExecutable", "PortableExecutable\PortableExecutable.vcxproj", "{F1841183-5E55-40D1-A013-7498264757D5}"
 EndProject
