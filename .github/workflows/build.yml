@@ -21,7 +21,7 @@ jobs:
         working-directory: ${{env.GITHUB_WORKSPACE}}
         id: build
         run: |
-          MSBuild.exe ./LLPeEditor.sln -property:Configuration=Release -property:Configuration=x64
+          MSBuild.exe ./LLPeEditor.sln -property:Configuration=Release
         shell: bash
 
       - name: Copy Upload Files
