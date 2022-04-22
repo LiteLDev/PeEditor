@@ -165,8 +165,8 @@ int main(int argc, char** argv) {
         try {
 
             if (mGenSymbolList) {
-                char tmp[4096];
-                sprintf_s(tmp, 4096, "[%08d] %s", fn.Rva, fn.Name.c_str());
+                char tmp[16384];
+                sprintf_s(tmp, 16384, "[%08d] %s", fn.Rva, fn.Name.c_str());
                 BDSSymList << tmp << std::endl;
             }
             bool skip = false;
