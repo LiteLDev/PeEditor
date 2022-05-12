@@ -38,7 +38,6 @@ int main(int argc, char** argv) {
         std::cout << "BDSLiteLoader PE Editor For BDS" << std::endl
             << "Usage: " << argv[0] << " [flags,...]" << std::endl
             << "Flags: -noMod     Do not generate bedrock_server_mod.exe" << std::endl
-            << "       -noSymDB   Do not generate bedrock_server.symdb2" << std::endl
             << "       -def       Generate def file for develop propose" << std::endl
             << "       -sym       Generate bedrock_server_SymList.txt for develop propose" << std::endl
             << "       -keepOri   Keep Original bedrock_server.exe" << std::endl
