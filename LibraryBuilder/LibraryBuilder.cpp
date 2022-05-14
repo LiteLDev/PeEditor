@@ -3,7 +3,6 @@
 #pragma warning(disable: 4267)
 #pragma warning(disable: 4244)
 #pragma warning(disable: 4624)
-#pragma execution_character_set("utf-8")
 
 #include <iostream>
 #include <filesystem>
@@ -61,7 +60,7 @@ string ChooseFolder()
     ZeroMemory(&bi, sizeof(BROWSEINFO));
     bi.hwndOwner = NULL;
     bi.pszDisplayName = szBuffer;
-    bi.lpszTitle = L"Choose a folder contains bedrock_server.pdb\n请选择一个包含bedrock_server.pdb的文件夹";
+    bi.lpszTitle = L"Choose a folder that contains bedrock_server.pdb";
     bi.ulFlags = BIF_RETURNFSANCESTORS;
 
     LPITEMIDLIST idl = SHBrowseForFolder(&bi);
@@ -129,8 +128,7 @@ int main(int argc, char** argv)
         else
         {
             MessageBox(NULL, L"Extra static library is needed to finish this compile.\n"
-                "You need to choose a folder contains bedrock_server.exe and bedrock_server.pdb next\n\n"
-                "需要额外的静态库来完成编译。接下来请需要选择一个含有bedrock_server.pdb文件的目录",
+                "You need to choose a folder contains bedrock_server.exe and bedrock_server.pdb next",
                 L"More action needed", MB_OK | MB_ICONINFORMATION);
 
             // Choose Folder
@@ -143,8 +141,7 @@ int main(int argc, char** argv)
     // Check Valid
     if (bdsPath.empty())
     {
-        MessageBox(NULL, L"You haven't choose a target, or the compile cannot continue!\n"
-            "你必须选择一个目录，否则编译将无法继续！", L"Error", MB_OK | MB_ICONERROR);
+        MessageBox(NULL, L"You must select a folder for the compilation process to work properly", L"Error", MB_OK | MB_ICONERROR);
         cout << "\n**** [Error]\n"
             "**** You must choose a folder for process!" << endl;
         ErrorExit(-1);
@@ -152,8 +149,7 @@ int main(int argc, char** argv)
 
     else if (!filesystem::exists(bdsPath + "/bedrock_server.pdb"))
     {
-        MessageBox(NULL, L"Wrong target directory! bedrock_server.pdb no found\n"
-            "你选择的目录错误！未找到bedrock_server.pdb", L"Error", MB_OK | MB_ICONERROR);
+        MessageBox(NULL, L"bedrock_server.pdb was not found in the folder you provided", L"Error", MB_OK | MB_ICONERROR);
         cout << "\n**** [Error]\n"
             "**** You must choose a folder contains *bedrock_server.pdb*!" << endl;
         ErrorExit(-3);
@@ -218,18 +214,16 @@ int main(int argc, char** argv)
     // Check valid
     if (apiFail)
     {
-        MessageBox(NULL, L"Fail to generate API static library!\n"
-            "API静态库文件生成失败！", L"Error", MB_OK | MB_ICONERROR);
+        MessageBox(NULL, L"Fail to generate import library for apis!", L"Error", MB_OK | MB_ICONERROR);
         cout << "\n**** [Error]\n"
-            "**** Fail to generate API static library!" << endl;
+            "**** Fail to generate import library for apis!" << endl;
         ErrorExit(-4);
     }
     if (varFail)
     {
-        MessageBox(NULL, L"Fail to generate VAR static library!\n"
-            "VAR静态库文件生成失败！", L"Error", MB_OK | MB_ICONERROR);
+        MessageBox(NULL, L"Fail to generate import library for variables!", L"Error", MB_OK | MB_ICONERROR);
         cout << "\n**** [Error]\n"
-            "**** Fail to generate VAR static library!" << endl;
+            "**** Fail to generate import library for variables!" << endl;
         ErrorExit(-5);
     }
 
