@@ -1,8 +1,9 @@
-﻿#pragma warning(disable: 4996)
+#pragma warning(disable: 4996)
 #pragma warning(disable: 4146)
 #pragma warning(disable: 4267)
 #pragma warning(disable: 4244)
 #pragma warning(disable: 4624)
+#pragma execution_character_set("utf-8")
 
 #include <iostream>
 #include <filesystem>
