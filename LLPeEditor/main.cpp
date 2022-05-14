@@ -11,6 +11,8 @@
 #include <fstream>
 #include <unordered_set>
 
+#include "skipFunctions.h"
+
 #include "cxxopts.hpp"
 
 #include "pdb.h"
@@ -95,23 +97,7 @@ int main(int argc, char** argv) {
 	int                       ExportCount = 1;
 	int                       ApiDefCount = 1;
 	int                       ApiDefFileCount = 1;
-	const std::vector<std::string> SkipPerfix = {
-		"_",
-		"?__",
-		"??_",
-		"??@",
-		"?$TSS"
-		"??_C",
-		"??3",
-		"??2",
-		"??_R4",
-		"??_E",
-		"??_G" };
-
-	const std::vector<std::regex> SkipRegex = {
-		std::regex(R"(\?+[a-zA-Z0-9_-]*([a-zA-Z0-9_-]*@)*std@@.*)", std::regex::icase),
-		std::regex(R"(.*printf$)", std::regex::icase),
-		std::regex(R"(.*no_alloc.*)", std::regex::icase) };
+	
 	std::ofstream BDSDef_API;
 	std::ofstream BDSDef_VAR;
 	std::ofstream BDSSymList;
@@ -186,13 +172,13 @@ int main(int argc, char** argv) {
 				skip = true;
 				goto Skipped;
 			}
-			for (const auto& a : SkipPerfix) {
+			for (const auto& a : LLTool::SkipPerfix) {
 				if (fn.Name.starts_with(a)) {
 					skip = true;
 					goto Skipped;
 				}
 			}
-			for (const auto& reg : SkipRegex) {
+			for (const auto& reg : LLTool::SkipRegex) {
 				std::smatch result;
 				if (std::regex_match(fn.Name, result, reg)) {
 					skip = true;

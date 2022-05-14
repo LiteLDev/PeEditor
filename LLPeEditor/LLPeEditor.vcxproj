@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="cxxopts.hpp" />
     <ClInclude Include="pdb.h" />
+    <ClInclude Include="skipFunctions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

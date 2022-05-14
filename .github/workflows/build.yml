@@ -15,7 +15,15 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1     
+        uses: microsoft/setup-msbuild@v1  
+
+      - name: Setup LibClang   
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: |
+          wget https://ziglang.org/deps/llvm%2bclang%2blld-13.0.1-x86_64-windows-msvc-release-mt.tar.xz -O LibClang.tar.xz
+          7z e LibClang.tar.xz
+          7z x LibClang.tar
+        shell: bash
 
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}

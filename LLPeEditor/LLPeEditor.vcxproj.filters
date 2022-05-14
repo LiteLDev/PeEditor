@@ -29,5 +29,8 @@
     <ClInclude Include="cxxopts.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="skipFunctions.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
