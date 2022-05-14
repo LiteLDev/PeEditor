@@ -151,6 +151,7 @@
     <Library Include="..\x64\Release\RawPDB.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cxxopts.hpp" />
     <ClInclude Include="pdb.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -26,5 +26,8 @@
     <ClInclude Include="pdb.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="cxxopts.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
