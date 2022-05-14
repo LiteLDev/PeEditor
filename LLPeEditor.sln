@@ -14,6 +14,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RawPDB", "RawPDB\RawPDB.vcxproj", "{94100F10-3854-4BCD-B0E3-7580C3362BF4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibraryBuilder", "LibraryBuilder\LibraryBuilder.vcxproj", "{352F013A-B12F-4954-80B0-DC2C236522B6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{94100F10-3854-4BCD-B0E3-7580C3362BF4} = {94100F10-3854-4BCD-B0E3-7580C3362BF4}
+		{F1841183-5E55-40D1-A013-7498264757D5} = {F1841183-5E55-40D1-A013-7498264757D5}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
