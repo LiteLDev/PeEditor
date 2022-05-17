@@ -53,13 +53,19 @@ int main(int argc, char** argv) {
 	options.allow_unrecognised_options();
 	options.add_options()
 		("noMod", "Do not generate bedrock_server_mod.exe")
-		("def", "Generate def files for develop propose")
+		("d,def", "Generate def files for develop propose")
 		("noPause", "Do not pause before exit")
-		("defApi", "Def File name for API Definitions", cxxopts::value<std::string>()->default_value("bedrock_server_api.def"))
-		("defVar", "Def File name for Variable Definitions", cxxopts::value<std::string>()->default_value("bedrock_server_var.def"))
-		("sym", "Generate symlist that contains symbol and it's rva", cxxopts::value<std::string>()->default_value("bedrock_server_symlist.txt"))
-		("exe", "BDS executeable file name", cxxopts::value<std::string>()->default_value("bedrock_server.exe"))
-		("pdb", "BDS debug database file name", cxxopts::value<std::string>()->default_value("bedrock_server.pdb"))
+		("defApi", "Def File name for API Definitions", cxxopts::value<std::string>()
+			->default_value("bedrock_server_api.def"))
+		("defVar", "Def File name for Variable Definitions", cxxopts::value<std::string>()
+			->default_value("bedrock_server_var.def"))
+		("s,sym", "Generate symlist that contains symbol and it's rva", cxxopts::value<std::string>()
+			->default_value("bedrock_server_symlist.txt")
+			->implicit_value("bedrock_server_symlist.txt"))
+		("exe", "BDS executeable file name", cxxopts::value<std::string>()
+			->default_value("bedrock_server.exe"))
+		("pdb", "BDS debug database file name", cxxopts::value<std::string>()
+			->default_value("bedrock_server.pdb"))
 		("h,help", "Print usage");
 	auto optionsResult = options.parse(argc, argv);
 
