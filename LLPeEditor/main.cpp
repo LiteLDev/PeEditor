@@ -11,6 +11,9 @@
 #include <fstream>
 #include <unordered_set>
 
+#include <llvm/Demangle/Demangle.h>
+#include <llvm/Demangle/MicrosoftDemangle.h>
+
 #include "skipFunctions.h"
 
 #include "cxxopts.hpp"
@@ -51,7 +54,6 @@ int main(int argc, char** argv) {
 	options.add_options()
 		("noMod", "Do not generate bedrock_server_mod.exe")
 		("def", "Generate def files for develop propose")
-		("keepOri", "Keep Original bedrock_server.exe")
 		("noPause", "Do not pause before exit")
 		("defApi", "Def File name for API Definitions", cxxopts::value<std::string>()->default_value("bedrock_server_api.def"))
 		("defVar", "Def File name for Variable Definitions", cxxopts::value<std::string>()->default_value("bedrock_server_var.def"))
@@ -69,7 +71,6 @@ int main(int argc, char** argv) {
 	bool mGenModBDS = !optionsResult["noMod"].as<bool>();
 	bool mGenDevDef = optionsResult["def"].as<bool>();
 	bool mGenSymbolList = optionsResult.count("sym");
-	bool mKeepOriginal = optionsResult["keepOri"].as<bool>();
 	bool mPause = !optionsResult["noPause"].as<bool>();
 
 	std::string mExeFile = optionsResult["exe"].as<std::string>();
@@ -83,8 +84,7 @@ int main(int argc, char** argv) {
 	std::cout << "[Info] Gen bedrock_server_mod.exe              " << std::boolalpha << std::string(mGenModBDS ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen bedrock_server_mod.def        [DEV] " << std::boolalpha << std::string(mGenDevDef ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen SymList file                  [DEV] " << std::boolalpha << std::string(mGenSymbolList ? " true" : "false") << std::endl;
-	std::cout << "[Info] Keep bedrock_server.exe           [DEV] " << std::boolalpha << std::string(mKeepOriginal ? " true" : "false") << std::endl;
-
+	
 	std::cout << "[Info] Loading PDB, Please wait" << std::endl;
 	auto FunctionList = loadPDB(str2wstr(mPdbFile).c_str());
 	std::cout << "[Info] Loaded " << FunctionList->size() << " Symbols" << std::endl;
@@ -163,9 +163,17 @@ int main(int argc, char** argv) {
 		try {
 
 			if (mGenSymbolList) {
-				char tmp[16384];
-				sprintf_s(tmp, 16384, "[%08d] %s", fn.Rva, fn.Name.c_str());
-				BDSSymList << tmp << std::endl;
+				char tmp[11];
+				sprintf_s(tmp, 11, "[%08d]", fn.Rva);
+				
+				auto demangledName = llvm::microsoftDemangle(
+					fn.Name.c_str(), nullptr, nullptr, nullptr, nullptr,
+					(llvm::MSDemangleFlags)(llvm::MSDF_NoCallingConvention | llvm::MSDF_NoAccessSpecifier));
+				if (demangledName) {
+					BDSSymList << demangledName << std::endl;
+					free(demangledName);
+				}
+				BDSSymList << tmp << fn.Name << std::endl << std::endl;
 			}
 			bool skip = false;
 			if (fn.Name[0] != '?') {
@@ -258,16 +266,6 @@ int main(int argc, char** argv) {
 			rebuild_pe(*OriginalBDS_PE, ModifiedBDS);
 			ModifiedBDS.close();
 			std::cout << "[Info] bedrock_server_mod.exe             Created" << std::endl;
-
-			try {
-				if (!mKeepOriginal) {
-					OriginalBDS.close();
-					if (std::filesystem::remove(std::filesystem::path(mExeFile)))
-						std::cout << "[Info] Original bedrock_server            Removed" << std::endl;
-				}
-			}
-			catch (...) {
-			}
 		}
 		catch (pe_exception e) {
 			std::cout << "[Error] Failed to rebuild bedrock_server_mod.exe" << std::endl;
