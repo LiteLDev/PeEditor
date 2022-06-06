@@ -149,7 +149,7 @@
     <ClCompile Include="pdb.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\LibClang\lib\LLVMDemangle.lib" />
+    <Library Include="..\x64\Release\Demangler.lib" />
     <Library Include="..\x64\Release\PortableExecutable.lib" />
     <Library Include="..\x64\Release\RawPDB.lib" />
   </ItemGroup>

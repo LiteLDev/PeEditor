@@ -248,7 +248,6 @@
     <Library Include="..\LibClang\lib\LLVMDebugInfoGSYM.lib" />
     <Library Include="..\LibClang\lib\LLVMDebugInfoMSF.lib" />
     <Library Include="..\LibClang\lib\LLVMDebugInfoPDB.lib" />
-    <Library Include="..\LibClang\lib\LLVMDemangle.lib" />
     <Library Include="..\LibClang\lib\LLVMDlltoolDriver.lib" />
     <Library Include="..\LibClang\lib\LLVMDWARFLinker.lib" />
     <Library Include="..\LibClang\lib\LLVMDWP.lib" />
@@ -365,6 +364,8 @@
     <Library Include="..\LibClang\lib\LLVMXRay.lib" />
     <Library Include="..\LibClang\lib\LTO.lib" />
     <Library Include="..\LibClang\lib\Remarks.lib" />
+    <Library Include="..\x64\Release\Demangler.lib" />
+    <Library Include="..\x64\Release\PortableExecutable.lib" />
     <Library Include="..\x64\Release\RawPDB.lib" />
   </ItemGroup>
   <ItemGroup>

@@ -21,7 +21,7 @@
   <ItemGroup>
     <Library Include="..\x64\Release\PortableExecutable.lib" />
     <Library Include="..\x64\Release\RawPDB.lib" />
-    <Library Include="..\LibClang\lib\LLVMDemangle.lib" />
+    <Library Include="..\x64\Release\Demangler.lib" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pdb.h">

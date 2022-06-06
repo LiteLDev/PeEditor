@@ -317,9 +317,6 @@
     <Library Include="..\LibClang\lib\LLVMDebugInfoPDB.lib">
       <Filter>LibClang</Filter>
     </Library>
-    <Library Include="..\LibClang\lib\LLVMDemangle.lib">
-      <Filter>LibClang</Filter>
-    </Library>
     <Library Include="..\LibClang\lib\LLVMDlltoolDriver.lib">
       <Filter>LibClang</Filter>
     </Library>
@@ -669,6 +666,8 @@
       <Filter>LibClang</Filter>
     </Library>
     <Library Include="..\x64\Release\RawPDB.lib" />
+    <Library Include="..\x64\Release\PortableExecutable.lib" />
+    <Library Include="..\x64\Release\Demangler.lib" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\LLPeEditor\pdb.h">

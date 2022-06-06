@@ -15,6 +15,8 @@
 #include "../LLPeEditor/pdb.h"
 #include "../LLPeEditor/skipFunctions.h"
 
+#include "../Demangler/FakeSymbol.hpp"
+
 #include <windows.h>
 #include <ShlObj.h>
 
@@ -195,8 +197,15 @@ int main(int argc, char** argv)
 
 		COFFShortExport record;
 		record.Name = i.Name;
-		if (i.IsFunction)
-			ApiExports.push_back(record);
+        if (i.IsFunction) {
+            ApiExports.push_back(record);
+            auto fakeSymbol = FakeSymbol::getFakeSymbol(i.Name);
+            if (fakeSymbol.has_value()) {
+                COFFShortExport fakeRecord;
+                fakeRecord.Name = fakeSymbol.value();
+                ApiExports.push_back(fakeRecord);
+            }
+        }
 		else
 			VarExports.push_back(record);
 	}
