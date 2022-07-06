@@ -111,7 +111,10 @@ deque<PdbSymbol>* loadFunctions(const PDB::RawFile& rawPdbFile, const PDB::DBISt
 		const PDB::CodeView::DBI::Record* record = publicSymbolStream.GetRecord(symbolRecordStream, hashRecord);
 		const uint32_t rva = imageSectionStream.ConvertSectionOffsetToRVA(record->data.S_PUB32.section, record->data.S_PUB32.offset);
 		if (rva == 0u) continue;
-		func->push_back(PdbSymbol(std::string(record->data.S_PUB32.name), rva, (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function)));
+		const std::string symbol(record->data.S_PUB32.name);
+		if (symbol.empty()) continue;
+		const bool isFunction = (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function));
+		func->push_back(PdbSymbol(symbol, rva, isFunction);
 	}
 	return func;
 }
