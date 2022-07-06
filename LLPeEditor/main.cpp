@@ -42,12 +42,12 @@ inline void Pause(bool Pause) {
 }
 
 int main(int argc, char** argv) {
-	if (argc == 1)
+	if (argc == 1){
 		system("mode con cols=49 lines=16");
-
-	SetConsoleCtrlHandler([](DWORD signal) -> BOOL {return TRUE; }, TRUE);
-	EnableMenuItem(GetSystemMenu(GetConsoleWindow(), FALSE), SC_CLOSE,
-		MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+		SetConsoleCtrlHandler([](DWORD signal) -> BOOL {return TRUE; }, TRUE);
+		EnableMenuItem(GetSystemMenu(GetConsoleWindow(), FALSE), SC_CLOSE,
+			MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	}
 
 	cxxopts::Options options("LLPeEditor", "BDSLiteLoader PE Editor For BDS");
 	options.allow_unrecognised_options();
@@ -91,9 +91,11 @@ int main(int argc, char** argv) {
 	std::cout << "[Info] Gen bedrock_server_mod.def        [DEV] " << std::boolalpha << std::string(mGenDevDef ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen SymList file                  [DEV] " << std::boolalpha << std::string(mGenSymbolList ? " true" : "false") << std::endl;
 	
-	std::cout << "[Info] Loading PDB, Please wait" << std::endl;
+	std::cout << "[Info] Loading PDB" << std::endl;
 	auto FunctionList = loadPDB(str2wstr(mPdbFile).c_str());
 	std::cout << "[Info] Loaded " << FunctionList->size() << " Symbols" << std::endl;
+	std::cout << "[Info] Generating BDS Please wait for few minutes" << std::endl;
+	
 	std::ifstream             OriginalBDS;
 	std::ofstream             ModifiedBDS;
 	pe_base* OriginalBDS_PE = nullptr;
@@ -237,7 +239,6 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 	}
-	//cout << ExportCount << endl;
 	if (mGenModBDS) {
 		try {
 			section ExportSection;
