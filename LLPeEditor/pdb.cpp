@@ -113,8 +113,8 @@ deque<PdbSymbol>* loadFunctions(const PDB::RawFile& rawPdbFile, const PDB::DBISt
 		if (rva == 0u) continue;
 		const std::string symbol(record->data.S_PUB32.name);
 		if (symbol.empty()) continue;
-		const bool isFunction = (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function));
-		func->push_back(PdbSymbol(symbol, rva, isFunction);
+		const bool isFunction = (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function);
+		func->push_back(PdbSymbol(symbol, rva, isFunction));
 	}
 	return func;
 }
