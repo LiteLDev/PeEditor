@@ -43,7 +43,6 @@ inline void Pause(bool Pause) {
 
 int main(int argc, char** argv) {
 	if (argc == 1){
-		system("mode con cols=49 lines=16");
 		SetConsoleCtrlHandler([](DWORD signal) -> BOOL {return TRUE; }, TRUE);
 		EnableMenuItem(GetSystemMenu(GetConsoleWindow(), FALSE), SC_CLOSE,
 			MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
