@@ -101,7 +101,6 @@ string& ReplaceStr(string& str, const string& old_value, const string& new_value
     return str;
 }
 
-
 int main(int argc, char** argv)
 {
     //Welcome
@@ -114,7 +113,7 @@ int main(int argc, char** argv)
     cout << "\n---Start Processing..." << endl;
 
     string bdsPath;
-    string generatedPath("../LiteLoader/Lib");
+    string generatedPath(".");
 
     TCHAR a[MAX_PATH];
     memset(a, 0, MAX_PATH);
