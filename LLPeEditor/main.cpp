@@ -41,6 +41,58 @@ inline void Pause(bool Pause) {
 		system("pause");
 }
 
+void ProcessLibFile(std::string libName, std::string modExeName) {
+	std::ifstream libFile;
+	std::ofstream outLibFile;
+
+	libFile.open(libName, std::ios::in | std::ios::binary);
+	if (!libFile) {
+		std::cout << "[Err] Cannot open " << libName << std::endl;
+		Pause(true);
+		return;
+	}
+	bool saveFlag = false;
+	pe_base* LiteLib_PE = new pe_base(pe_factory::create_pe(libFile));
+	try {
+		imported_functions_list imports(get_imported_functions(*LiteLib_PE));
+		for (int i = 0; i < imports.size(); i++) {
+			if (imports[i].get_name() == "bedrock_server_mod.exe") {
+				imports[i].set_name(modExeName);
+				std::cout << "[INFO] Modding dll file " << libName << std::endl;
+				saveFlag = true;
+			}
+		}
+
+		if (saveFlag) {
+			section ImportSection;
+			ImportSection.get_raw_data().resize(1);
+			ImportSection.set_name("ImpFunc");
+			ImportSection.readable(true).writeable(true);
+			section& attachedImportedSection = LiteLib_PE->add_section(ImportSection);
+			pe_bliss::rebuild_imports(*LiteLib_PE, imports, attachedImportedSection, import_rebuilder_settings(true, false));
+
+			outLibFile.open("LiteLoader.tmp", std::ios::out | std::ios::binary | std::ios::trunc);
+			if (!outLibFile) {
+				std::cout << "[Err] Cannot create LiteLoader.tmp!" << std::endl;
+				Pause(true);
+				return;
+			}
+			std::cout << "[INFO] Writting dll file " << libName << std::endl;
+			rebuild_pe(*LiteLib_PE, outLibFile);
+			libFile.close();
+			std::filesystem::remove(std::filesystem::path(libName));
+			outLibFile.close();
+			std::filesystem::rename(std::filesystem::path("LiteLoader.tmp"), std::filesystem::path(libName));
+		}
+	}
+	catch (const pe_exception& e) {
+		std::cout << "[Err] Set ImportName Failed: " << e.what() << std::endl;
+		Pause(true);
+		return;
+	}
+
+}
+
 int main(int argc, char** argv) {
 	if (argc == 1){
 		SetConsoleCtrlHandler([](DWORD signal) -> BOOL {return TRUE; }, TRUE);
@@ -63,6 +115,8 @@ int main(int argc, char** argv) {
 			->implicit_value("bedrock_server_symlist.txt"))
 		("exe", "BDS executeable file name", cxxopts::value<std::string>()
 			->default_value("bedrock_server.exe"))
+		("o,out", "LL executeable output file name", cxxopts::value<std::string>()
+			->default_value("bedrock_server_mod.exe"))
 		("pdb", "BDS debug database file name", cxxopts::value<std::string>()
 			->default_value("bedrock_server.pdb"))
 		("h,help", "Print usage");
@@ -79,6 +133,7 @@ int main(int argc, char** argv) {
 	bool mPause = !optionsResult["noPause"].as<bool>();
 
 	std::string mExeFile = optionsResult["exe"].as<std::string>();
+	std::string mOutputExeFile = optionsResult["out"].as<std::string>();
 	std::string mPdbFile = optionsResult["pdb"].as<std::string>();
 	std::string mDefApiFile = optionsResult["defApi"].as<std::string>();
 	std::string mDefVarFile = optionsResult["defVar"].as<std::string>();
@@ -86,9 +141,10 @@ int main(int argc, char** argv) {
 
 	std::cout << "[Info] LiteLoader ToolChain PEEditor" << std::endl;
 	std::cout << "[Info] BuildDate CST " __TIMESTAMP__ << std::endl;
-	std::cout << "[Info] Gen bedrock_server_mod.exe              " << std::boolalpha << std::string(mGenModBDS ? " true" : "false") << std::endl;
+	std::cout << "[Info] Gen mod executable                      " << std::boolalpha << std::string(mGenModBDS ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen bedrock_server_mod.def        [DEV] " << std::boolalpha << std::string(mGenDevDef ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen SymList file                  [DEV] " << std::boolalpha << std::string(mGenSymbolList ? " true" : "false") << std::endl;
+	std::cout << "[Info] Output: " << mOutputExeFile << std::endl;
 	
 	std::cout << "[Info] Loading PDB" << std::endl;
 	auto FunctionList = loadPDB(str2wstr(mPdbFile).c_str());
@@ -96,8 +152,11 @@ int main(int argc, char** argv) {
 	std::cout << "[Info] Generating BDS Please wait for few minutes" << std::endl;
 	
 	std::ifstream             OriginalBDS;
+	std::ifstream			  LiteLib;
 	std::ofstream             ModifiedBDS;
+	std::ofstream             ModdedLiteLib;
 	pe_base* OriginalBDS_PE = nullptr;
+	pe_base* LiteLib_PE = nullptr;
 	export_info                OriginalBDS_ExportInf;
 	exported_functions_list         OriginalBDS_ExportFunc;
 	uint16_t                  ExportLimit = 0;
@@ -111,10 +170,12 @@ int main(int argc, char** argv) {
 	if (mGenModBDS) {
 		OriginalBDS.open(mExeFile, std::ios::in | std::ios::binary);
 
+		if (mOutputExeFile != "bedrock_server_mod.exe") ProcessLibFile("LiteLoader.dll", mOutputExeFile);
+
 		if (OriginalBDS) {
-			ModifiedBDS.open("bedrock_server_mod.exe", std::ios::out | std::ios::binary | std::ios::trunc);
+			ModifiedBDS.open(mOutputExeFile, std::ios::out | std::ios::binary | std::ios::trunc);
 			if (!ModifiedBDS) {
-				std::cout << "[Err] Cannot create bedrock_server_mod.exe" << std::endl;
+				std::cout << "[Err] Cannot create " << mOutputExeFile << std::endl;
 				Pause(mPause);
 				return -1;
 			}
@@ -155,7 +216,7 @@ int main(int argc, char** argv) {
 			Pause(mPause);
 			return -1;
 		}
-		BDSDef_VAR << "LIBRARY bedrock_server_mod.exe\nEXPORTS\n";
+		BDSDef_VAR << "LIBRARY " << mOutputExeFile << "\nEXPORTS\n";
 	}
 	if (mGenSymbolList) {
 		BDSSymList.open(mSymFile, std::ios::ate | std::ios::out);
@@ -271,18 +332,18 @@ int main(int argc, char** argv) {
 
 			rebuild_pe(*OriginalBDS_PE, ModifiedBDS);
 			ModifiedBDS.close();
-			std::cout << "[Info] bedrock_server_mod.exe             Created" << std::endl;
+			std::cout << "[Info] " << mOutputExeFile << " Created." << std::endl;
 		}
 		catch (pe_exception e) {
-			std::cout << "[Error] Failed to rebuild bedrock_server_mod.exe" << std::endl;
+			std::cout << "[Error] Failed to rebuild " << mOutputExeFile << std::endl;
 			std::cout << "[Error] " << e.what() << std::endl;
 			ModifiedBDS.close();
-			std::filesystem::remove(std::filesystem::path("bedrock_server_mod.exe"));
+			std::filesystem::remove(std::filesystem::path(mOutputExeFile));
 		}
 		catch (...) {
-			std::cout << "[Error] Failed to rebuild bedrock_server_mod.exe with unk err" << std::endl;
+			std::cout << "[Error] Failed to rebuild " << mOutputExeFile << " with unk err" << std::endl;
 			ModifiedBDS.close();
-			std::filesystem::remove(std::filesystem::path("bedrock_server_mod.exe"));
+			std::filesystem::remove(std::filesystem::path(mOutputExeFile));
 		}
 	}
 	if (mGenDevDef) {
@@ -304,7 +365,7 @@ int main(int argc, char** argv) {
 			std::cout << "[Info] [DEV]Symbol List File              Created" << std::endl;
 		}
 		catch (...) {
-			std::cout << "[Error] Failed to Cerate " << mSymFile << std::endl;
+			std::cout << "[Error] Failed to Create " << mSymFile << std::endl;
 		}
 	}
 
