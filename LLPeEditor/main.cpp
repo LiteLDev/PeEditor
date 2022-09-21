@@ -41,15 +41,14 @@ inline void Pause(bool Pause) {
 		system("pause");
 }
 
-void ProcessLibFile(std::string libName, std::string modExeName) {
+bool ProcessLibFile(std::string libName, std::string modExeName) {
 	std::ifstream libFile;
 	std::ofstream outLibFile;
 
 	libFile.open(libName, std::ios::in | std::ios::binary);
 	if (!libFile) {
 		std::cout << "[Err] Cannot open " << libName << std::endl;
-		Pause(true);
-		return;
+		return false;
 	}
 	bool saveFlag = false;
 	pe_base* LiteLib_PE = new pe_base(pe_factory::create_pe(libFile));
@@ -74,8 +73,7 @@ void ProcessLibFile(std::string libName, std::string modExeName) {
 			outLibFile.open("LiteLoader.tmp", std::ios::out | std::ios::binary | std::ios::trunc);
 			if (!outLibFile) {
 				std::cout << "[Err] Cannot create LiteLoader.tmp!" << std::endl;
-				Pause(true);
-				return;
+				return false;
 			}
 			std::cout << "[INFO] Writting dll file " << libName << std::endl;
 			rebuild_pe(*LiteLib_PE, outLibFile);
@@ -87,13 +85,12 @@ void ProcessLibFile(std::string libName, std::string modExeName) {
 	}
 	catch (const pe_exception& e) {
 		std::cout << "[Err] Set ImportName Failed: " << e.what() << std::endl;
-		Pause(true);
-		return;
+		return false;
 	}
-
+	return true;
 }
 
-void ProcessLibDirectory(std::string directoryName, std::string outputExeFilename) {
+bool ProcessLibDirectory(std::string directoryName, std::string outputExeFilename) {
 	std::filesystem::directory_iterator directory(directoryName);
 
 	for (auto& file : directory) {
@@ -115,8 +112,9 @@ void ProcessLibDirectory(std::string directoryName, std::string outputExeFilenam
 		pluginName.append(directoryName);
 		pluginName.append("\\");
 		pluginName.append(name);
-		ProcessLibFile(pluginName, outputExeFilename);
+		if (!ProcessLibFile(pluginName, outputExeFilename)) return false;
 	}
+	return true;
 }
 
 int main(int argc, char** argv) {
@@ -129,9 +127,10 @@ int main(int argc, char** argv) {
 	cxxopts::Options options("LLPeEditor", "BDSLiteLoader PE Editor For BDS");
 	options.allow_unrecognised_options();
 	options.add_options()
-		("noMod", "Do not generate bedrock_server_mod.exe")
+		("noMod", "Do not generate modded executable")
 		("d,def", "Generate def files for develop propose")
-		("noPause", "Do not pause before exit")
+		("q,quiet", "Do not pause before exit")
+		("p,pluginsOnly", "Only process olugin files for alternate executable name")
 		("defApi", "Def File name for API Definitions", cxxopts::value<std::string>()
 			->default_value("bedrock_server_api.def"))
 		("defVar", "Def File name for Variable Definitions", cxxopts::value<std::string>()
@@ -156,7 +155,8 @@ int main(int argc, char** argv) {
 	bool mGenModBDS = !optionsResult["noMod"].as<bool>();
 	bool mGenDevDef = optionsResult["def"].as<bool>();
 	bool mGenSymbolList = optionsResult.count("sym");
-	bool mPause = !optionsResult["noPause"].as<bool>();
+	bool mPause = !optionsResult["quiet"].as<bool>();
+	bool mPlugins = optionsResult["pluginsOnly"].as<bool>();
 
 	std::string mExeFile = optionsResult["exe"].as<std::string>();
 	std::string mOutputExeFile = optionsResult["out"].as<std::string>();
@@ -165,11 +165,18 @@ int main(int argc, char** argv) {
 	std::string mDefVarFile = optionsResult["defVar"].as<std::string>();
 	std::string mSymFile = optionsResult["sym"].as<std::string>();
 
+	if (mPlugins) {
+		mGenModBDS = false;
+		mGenDevDef = false;
+		mGenSymbolList = false;
+	}
+
 	std::cout << "[Info] LiteLoader ToolChain PEEditor" << std::endl;
 	std::cout << "[Info] BuildDate CST " __TIMESTAMP__ << std::endl;
 	std::cout << "[Info] Gen mod executable                      " << std::boolalpha << std::string(mGenModBDS ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen bedrock_server_mod.def        [DEV] " << std::boolalpha << std::string(mGenDevDef ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen SymList file                  [DEV] " << std::boolalpha << std::string(mGenSymbolList ? " true" : "false") << std::endl;
+	std::cout << "[Info] Fix Plugins                       [DEV] " << std::boolalpha << std::string(mPlugins ? " true" : "false") << std::endl;
 	std::cout << "[Info] Output: " << mOutputExeFile << std::endl;
 	
 	std::cout << "[Info] Loading PDB" << std::endl;
@@ -193,13 +200,34 @@ int main(int argc, char** argv) {
 	std::ofstream BDSDef_API;
 	std::ofstream BDSDef_VAR;
 	std::ofstream BDSSymList;
+
+	if (mPlugins) {
+		if (ProcessLibFile("LiteLoader.dll", mOutputExeFile) && ProcessLibDirectory("plugins", mOutputExeFile) && ProcessLibDirectory("plugins\\LiteLoader", mOutputExeFile)) {
+			std::cout << "[Info] Plugins have been fixed." << std::endl;
+			Pause(mPause);
+			return 0;
+		}
+		else {
+			std::cout << "[Error] There was am error fixing plugins!" << std::endl;
+			Pause(mPause);
+			return -1;
+		}
+	}
+
 	if (mGenModBDS) {
 		OriginalBDS.open(mExeFile, std::ios::in | std::ios::binary);
 
 		if (mOutputExeFile != "bedrock_server_mod.exe") {
-			ProcessLibFile("LiteLoader.dll", mOutputExeFile);
-			ProcessLibDirectory("plugins", mOutputExeFile);
-			ProcessLibDirectory("plugins\\LiteLoader", mOutputExeFile);
+			if (ProcessLibFile("LiteLoader.dll", mOutputExeFile) && ProcessLibDirectory("plugins", mOutputExeFile) && ProcessLibDirectory("plugins\\LiteLoader", mOutputExeFile)) {
+				std::cout << "[Info] Plugins have been fixed." << std::endl;
+				Pause(mPause);
+				return 0;
+			}
+			else {
+				std::cout << "[Error] There was am error fixing plugins!" << std::endl;
+				Pause(mPause);
+				return -1;
+			}
 		}
 
 		if (OriginalBDS) {
@@ -256,77 +284,79 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 	}
-	for (const auto& fn : *FunctionList) {
+	if (!mPlugins) {
+		for (const auto& fn : *FunctionList) {
 
-		try {
+			try {
 
-			if (mGenSymbolList) {
-				char tmp[11];
-				sprintf_s(tmp, 11, "[%08d]", fn.Rva);
-				
-				auto demangledName = llvm::microsoftDemangle(
-					fn.Name.c_str(), nullptr, nullptr, nullptr, nullptr,
-					(llvm::MSDemangleFlags)(llvm::MSDF_NoCallingConvention | llvm::MSDF_NoAccessSpecifier));
-				if (demangledName) {
-					BDSSymList << demangledName << std::endl;
-					free(demangledName);
+				if (mGenSymbolList) {
+					char tmp[11];
+					sprintf_s(tmp, 11, "[%08d]", fn.Rva);
+
+					auto demangledName = llvm::microsoftDemangle(
+						fn.Name.c_str(), nullptr, nullptr, nullptr, nullptr,
+						(llvm::MSDemangleFlags)(llvm::MSDF_NoCallingConvention | llvm::MSDF_NoAccessSpecifier));
+					if (demangledName) {
+						BDSSymList << demangledName << std::endl;
+						free(demangledName);
+					}
+					BDSSymList << tmp << fn.Name << std::endl << std::endl;
 				}
-				BDSSymList << tmp << fn.Name << std::endl << std::endl;
-			}
-			bool skip = false;
-			if (fn.Name[0] != '?') {
-				skip = true;
-				goto Skipped;
-			}
-			for (const auto& a : LLTool::SkipPerfix) {
-				if (fn.Name.starts_with(a)) {
+				bool skip = false;
+				if (fn.Name[0] != '?') {
 					skip = true;
 					goto Skipped;
 				}
-			}
-			for (const auto& reg : LLTool::SkipRegex) {
-				std::smatch result;
-				if (std::regex_match(fn.Name, result, reg)) {
-					skip = true;
-					goto Skipped;
+				for (const auto& a : LLTool::SkipPerfix) {
+					if (fn.Name.starts_with(a)) {
+						skip = true;
+						goto Skipped;
+					}
 				}
-			}
-		Skipped:
+				for (const auto& reg : LLTool::SkipRegex) {
+					std::smatch result;
+					if (std::regex_match(fn.Name, result, reg)) {
+						skip = true;
+						goto Skipped;
+					}
+				}
+			Skipped:
 
-			if (mGenDevDef && !skip)
-				if (fn.IsFunction) {
-					BDSDef_API << "\t" << fn.Name << "\n";
+				if (mGenDevDef && !skip)
+					if (fn.IsFunction) {
+						BDSDef_API << "\t" << fn.Name << "\n";
+					}
+					else
+						BDSDef_VAR << "\t" << fn.Name << "\n";
+				if (mGenModBDS && !fn.IsFunction && !skip) {
+					exported_function func;
+					func.set_name(fn.Name);
+					func.set_rva(fn.Rva);
+					func.set_ordinal(ExportLimit + ExportCount);
+					ExportCount++;
+					if (ExportCount > 65535) {
+						std::cout << "[Err] Too many Symbols are going to insert to ExportTable" << std::endl;
+						Pause(mPause);
+						return 1;
+					}
+					OriginalBDS_ExportFunc.push_back(func);
 				}
-				else
-					BDSDef_VAR << "\t" << fn.Name << "\n";
-			if (mGenModBDS && !fn.IsFunction && !skip) {
-				exported_function func;
-				func.set_name(fn.Name);
-				func.set_rva(fn.Rva);
-				func.set_ordinal(ExportLimit + ExportCount);
-				ExportCount++;
-				if (ExportCount > 65535) {
-					std::cout << "[Err] Too many Symbols are going to insert to ExportTable" << std::endl;
-					Pause(mPause);
-					return 1;
-				}
-				OriginalBDS_ExportFunc.push_back(func);
 			}
-		}
-		catch (const pe_exception& e) {
-			std::cout << "PeEditor : " << e.what() << std::endl;
-			Pause(mPause);
-			return -1;
-		}
-		catch (const std::regex_error& e) {
-			std::cout << "RegexErr : " << e.what() << std::endl;
-			Pause(mPause);
-			return -1;
-		}
-		catch (...) {
-			std::cout << "UnkErr " << std::endl;
-			Pause(mPause);
-			return -1;
+			catch (const pe_exception& e) {
+				std::cout << "PeEditor : " << e.what() << std::endl;
+				Pause(mPause);
+				return -1;
+			}
+			catch (const std::regex_error& e) {
+				std::cout << "RegexErr : " << e.what() << std::endl;
+				Pause(mPause);
+				return -1;
+			}
+			catch (...) {
+				std::cout << "UnkErr " << std::endl;
+				Pause(mPause);
+				return -1;
+			}
 		}
 	}
 	if (mGenModBDS) {
