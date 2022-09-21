@@ -93,6 +93,32 @@ void ProcessLibFile(std::string libName, std::string modExeName) {
 
 }
 
+void ProcessLibDirectory(std::string directoryName, std::string outputExeFilename) {
+	std::filesystem::directory_iterator directory(directoryName);
+
+	for (auto& file : directory) {
+		if (!file.is_regular_file()) {
+			continue;
+		}
+		std::filesystem::path path = file.path();
+		std::u8string u8Name = path.filename().u8string();
+		std::u8string u8Ext = path.extension().u8string();
+		std::string name = reinterpret_cast<std::string&>(u8Name);
+		std::string ext = reinterpret_cast<std::string&>(u8Ext);
+
+		// Check is dll
+		if (ext != ".dll") {
+			continue;
+		}
+
+		std::string pluginName;
+		pluginName.append(directoryName);
+		pluginName.append("\\");
+		pluginName.append(name);
+		ProcessLibFile(pluginName, outputExeFilename);
+	}
+}
+
 int main(int argc, char** argv) {
 	if (argc == 1){
 		SetConsoleCtrlHandler([](DWORD signal) -> BOOL {return TRUE; }, TRUE);
@@ -170,7 +196,11 @@ int main(int argc, char** argv) {
 	if (mGenModBDS) {
 		OriginalBDS.open(mExeFile, std::ios::in | std::ios::binary);
 
-		if (mOutputExeFile != "bedrock_server_mod.exe") ProcessLibFile("LiteLoader.dll", mOutputExeFile);
+		if (mOutputExeFile != "bedrock_server_mod.exe") {
+			ProcessLibFile("LiteLoader.dll", mOutputExeFile);
+			ProcessLibDirectory("plugins", mOutputExeFile);
+			ProcessLibDirectory("plugins\\LiteLoader", mOutputExeFile);
+		}
 
 		if (OriginalBDS) {
 			ModifiedBDS.open(mOutputExeFile, std::ios::out | std::ios::binary | std::ios::trunc);
