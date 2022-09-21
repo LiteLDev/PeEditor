@@ -82,6 +82,8 @@ bool ProcessLibFile(std::string libName, std::string modExeName) {
 			outLibFile.close();
 			std::filesystem::rename(std::filesystem::path("LiteLoader.tmp"), std::filesystem::path(libName));
 		}
+		if (libFile.is_open()) libFile.close();
+		if (outLibFile.is_open()) outLibFile.close();
 	}
 	catch (const pe_exception& e) {
 		std::cout << "[Err] Set ImportName Failed: " << e.what() << std::endl;
@@ -129,7 +131,7 @@ int main(int argc, char** argv) {
 	options.add_options()
 		("noMod", "Do not generate modded executable")
 		("d,def", "Generate def files for develop propose")
-		("q,quiet", "Do not pause before exit")
+		("q,noPause", "Do not pause before exit")
 		("p,pluginsOnly", "Only process olugin files for alternate executable name")
 		("defApi", "Def File name for API Definitions", cxxopts::value<std::string>()
 			->default_value("bedrock_server_api.def"))
@@ -155,8 +157,8 @@ int main(int argc, char** argv) {
 	bool mGenModBDS = !optionsResult["noMod"].as<bool>();
 	bool mGenDevDef = optionsResult["def"].as<bool>();
 	bool mGenSymbolList = optionsResult.count("sym");
-	bool mPause = !optionsResult["quiet"].as<bool>();
-	bool mPlugins = optionsResult["pluginsOnly"].as<bool>();
+	bool mShouldPause = !optionsResult["noPause"].as<bool>();
+	bool mPluginsOnly = optionsResult["pluginsOnly"].as<bool>();
 
 	std::string mExeFile = optionsResult["exe"].as<std::string>();
 	std::string mOutputExeFile = optionsResult["out"].as<std::string>();
@@ -165,7 +167,7 @@ int main(int argc, char** argv) {
 	std::string mDefVarFile = optionsResult["defVar"].as<std::string>();
 	std::string mSymFile = optionsResult["sym"].as<std::string>();
 
-	if (mPlugins) {
+	if (mPluginsOnly) {
 		mGenModBDS = false;
 		mGenDevDef = false;
 		mGenSymbolList = false;
@@ -176,7 +178,7 @@ int main(int argc, char** argv) {
 	std::cout << "[Info] Gen mod executable                      " << std::boolalpha << std::string(mGenModBDS ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen bedrock_server_mod.def        [DEV] " << std::boolalpha << std::string(mGenDevDef ? " true" : "false") << std::endl;
 	std::cout << "[Info] Gen SymList file                  [DEV] " << std::boolalpha << std::string(mGenSymbolList ? " true" : "false") << std::endl;
-	std::cout << "[Info] Fix Plugins                       [DEV] " << std::boolalpha << std::string(mPlugins ? " true" : "false") << std::endl;
+	std::cout << "[Info] Fix Plugins                       [DEV] " << std::boolalpha << std::string(mPluginsOnly ? " true" : "false") << std::endl;
 	std::cout << "[Info] Output: " << mOutputExeFile << std::endl;
 	
 	std::cout << "[Info] Loading PDB" << std::endl;
@@ -201,15 +203,15 @@ int main(int argc, char** argv) {
 	std::ofstream BDSDef_VAR;
 	std::ofstream BDSSymList;
 
-	if (mPlugins) {
+	if (mPluginsOnly) {
 		if (ProcessLibFile("LiteLoader.dll", mOutputExeFile) && ProcessLibDirectory("plugins", mOutputExeFile) && ProcessLibDirectory("plugins\\LiteLoader", mOutputExeFile)) {
 			std::cout << "[Info] Plugins have been fixed." << std::endl;
-			Pause(mPause);
+			Pause(mShouldPause);
 			return 0;
 		}
 		else {
 			std::cout << "[Error] There was am error fixing plugins!" << std::endl;
-			Pause(mPause);
+			Pause(mShouldPause);
 			return -1;
 		}
 	}
@@ -220,12 +222,12 @@ int main(int argc, char** argv) {
 		if (mOutputExeFile != "bedrock_server_mod.exe") {
 			if (ProcessLibFile("LiteLoader.dll", mOutputExeFile) && ProcessLibDirectory("plugins", mOutputExeFile) && ProcessLibDirectory("plugins\\LiteLoader", mOutputExeFile)) {
 				std::cout << "[Info] Plugins have been fixed." << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return 0;
 			}
 			else {
 				std::cout << "[Error] There was am error fixing plugins!" << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return -1;
 			}
 		}
@@ -234,12 +236,12 @@ int main(int argc, char** argv) {
 			ModifiedBDS.open(mOutputExeFile, std::ios::out | std::ios::binary | std::ios::trunc);
 			if (!ModifiedBDS) {
 				std::cout << "[Err] Cannot create " << mOutputExeFile << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return -1;
 			}
 			if (!OriginalBDS) {
 				std::cout << "[Err] Cannot open bedrock_server.exe" << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return -1;
 			}
 			OriginalBDS_PE = new pe_base(pe_factory::create_pe(OriginalBDS));
@@ -248,14 +250,14 @@ int main(int argc, char** argv) {
 			}
 			catch (const pe_exception& e) {
 				std::cout << "[Err] Get Exported Failed: " << e.what() << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return -1;
 			}
 			ExportLimit = get_export_ordinal_limits(OriginalBDS_ExportFunc).second;
 		}
 		else {
 			std::cout << "[Err] Failed to Open bedrock_server.exe" << std::endl;
-			Pause(mPause);
+			Pause(mShouldPause);
 			return -1;
 		}
 	}
@@ -263,7 +265,7 @@ int main(int argc, char** argv) {
 		BDSDef_API.open(mDefApiFile, std::ios::ate | std::ios::out);
 		if (!BDSDef_API) {
 			std::cout << "[Err] Cannot create bedrock_server_api_0.def" << std::endl;
-			Pause(mPause);
+			Pause(mShouldPause);
 			return -1;
 		}
 		BDSDef_API << "LIBRARY bedrock_server.dll\nEXPORTS\n";
@@ -271,7 +273,7 @@ int main(int argc, char** argv) {
 		BDSDef_VAR.open(mDefVarFile, std::ios::ate | std::ios::out);
 		if (!BDSDef_VAR) {
 			std::cout << "[Err] Cannot create bedrock_server_var.def" << std::endl;
-			Pause(mPause);
+			Pause(mShouldPause);
 			return -1;
 		}
 		BDSDef_VAR << "LIBRARY " << mOutputExeFile << "\nEXPORTS\n";
@@ -280,11 +282,11 @@ int main(int argc, char** argv) {
 		BDSSymList.open(mSymFile, std::ios::ate | std::ios::out);
 		if (!BDSSymList) {
 			std::cout << "[Err] Cannot create " << mSymFile << std::endl;
-			Pause(mPause);
+			Pause(mShouldPause);
 			return -1;
 		}
 	}
-	if (!mPlugins) {
+	if (!mPluginsOnly) {
 		for (const auto& fn : *FunctionList) {
 
 			try {
@@ -336,7 +338,7 @@ int main(int argc, char** argv) {
 					ExportCount++;
 					if (ExportCount > 65535) {
 						std::cout << "[Err] Too many Symbols are going to insert to ExportTable" << std::endl;
-						Pause(mPause);
+						Pause(mShouldPause);
 						return 1;
 					}
 					OriginalBDS_ExportFunc.push_back(func);
@@ -344,17 +346,17 @@ int main(int argc, char** argv) {
 			}
 			catch (const pe_exception& e) {
 				std::cout << "PeEditor : " << e.what() << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return -1;
 			}
 			catch (const std::regex_error& e) {
 				std::cout << "RegexErr : " << e.what() << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return -1;
 			}
 			catch (...) {
 				std::cout << "UnkErr " << std::endl;
-				Pause(mPause);
+				Pause(mShouldPause);
 				return -1;
 			}
 		}
@@ -429,6 +431,6 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	Pause(mPause);
+	Pause(mShouldPause);
 	return 0;
 }
