@@ -23,6 +23,7 @@ Usage:
   -m, --mod              Generate bedrock_server_mod.exe (will be true if no arg passed)
   -p, --pause            Pause before exit (will be true if no arg passed)
   -n, --new              Use LiteLoader v3 preview mode
+  -b, --bak              Add a suffix ".bak" to original server exe (will be true if no arg passed)
   -d, --def              Generate def files for develop propose
   -l, --lib              Generate lib files for develop propose
   -s, --sym              Generate symbol list containing symbol and rva
