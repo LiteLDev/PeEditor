@@ -14,6 +14,8 @@ add_requires("ctre")
 add_requires("demangler")
 add_requires("pe_bliss")
 
+set_runtimes("MD")
+
 target("PeEditor")
     set_kind("binary")
     set_languages("c++20")
