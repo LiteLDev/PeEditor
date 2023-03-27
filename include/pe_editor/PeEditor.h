@@ -13,7 +13,7 @@
 
 #include "pe_editor/Pdb.h"
 
-#define PE_EDITOR_VERSION "v3.1.0"
+#define PE_EDITOR_VERSION "v3.1.1"
 
 namespace pe_editor {
 
