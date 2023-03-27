@@ -1,6 +1,6 @@
 # PeEditor
 
-__LiteLoaderBDS Toolchain__
+_LiteLoaderBDS Toolchain_
 
 ## Features
 
