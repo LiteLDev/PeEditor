@@ -1,6 +1,7 @@
 #include "pe_editor/PeEditor.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <ranges>
 #include <string_view>
@@ -15,6 +16,7 @@
 #include "pe_editor/Filter.h"
 #include "pe_editor/StringUtils.h"
 
+#include <system_error>
 #include <windows.h>
 
 namespace pe_editor {
@@ -32,8 +34,9 @@ inline void exitWith(int code) {
 inline std::string getPathUtf8(const std::filesystem::path& path) { return StringUtils::wstr2str(path.wstring()); }
 
 void parseArgs(int argc, char** argv) {
-    cxxopts::Options options("PeEditor", "LiteLoaderBDS ToolChain");
+    cxxopts::Options options("PeEditor", "LiteLoaderBDS ToolChain PeEditor " PE_EDITOR_VERSION);
     options.allow_unrecognised_options();
+    options.set_width(-1);
     using cxxopts::value;
     using std::string;
     // clang-format off
@@ -41,6 +44,7 @@ void parseArgs(int argc, char** argv) {
         ("m,mod", "Generate bedrock_server_mod.exe (will be true if no arg passed)", value<bool>()->default_value("false"))
         ("p,pause", "Pause before exit (will be true if no arg passed)", value<bool>()->default_value("false"))
         ("n,new", "Use LiteLoader v3 preview mode", value<bool>()->default_value("false"))
+        ("b,bak", "Add a suffix \".bak\" to original server exe (will be true if no arg passed)", value<bool>()->default_value("false"))
         ("d,def", "Generate def files for develop propose", value<bool>()->default_value("false"))
         ("l,lib", "Generate lib files for develop propose", value<bool>()->default_value("false"))
         ("s,sym", "Generate symbol list containing symbol and rva", value<bool>()->default_value("false"))
@@ -73,6 +77,7 @@ void parseArgs(int argc, char** argv) {
     config::genDefFile    = optionsResult["def"].as<bool>();
     config::genLibFile    = optionsResult["lib"].as<bool>();
     config::genSymbolList = optionsResult["sym"].as<bool>();
+    config::backupBds     = optionsResult["bak"].as<bool>();
     config::shouldPause   = optionsResult["pause"].as<bool>();
     config::choosePdbFile = optionsResult["choose-pdb-file"].as<bool>();
     config::liteloader3   = optionsResult["new"].as<bool>();
@@ -297,11 +302,29 @@ int generateModdedBds() {
         rebuild_imports(*originBds.pe, imports, attachedImportedSection, import_rebuilder_settings(true, false));
 
         rebuild_pe(*originBds.pe, moddedBds);
+
         moddedBds.close();
+        originBds.file.close();
         logger->info("Generated bedrock_server_mod.exe successfully.");
+
+        if (!config::backupBds) {
+            return 0;
+        }
+
+        std::error_code ec;
+        auto            newBdsPath = config::bdsExePath;
+        newBdsPath.replace_extension(L".exe.bak");
+        std::filesystem::rename(config::bdsExePath, newBdsPath, ec);
+        if (ec) {
+            logger->error("Failed to backup bedrock_server.exe: {}", ec.message());
+            return -1;
+        }
+        logger->info("Backed up bedrock_server.exe successfully.");
+
     } catch (pe_bliss::pe_exception& e) {
         logger->error("Failed to rebuild bedrock_server_mod.exe: {}", e.what());
         moddedBds.close();
+        originBds.file.close();
         std::filesystem::remove(config::outputDir / "bedrock_server_mod.exe");
     }
     return 0;
@@ -323,10 +346,11 @@ int main(int argc, char** argv) {
 
     if (argc == 1) {
         config::genModdedBds = true;
+        config::backupBds    = true;
         config::shouldPause  = true;
     }
 
-    logger->info("LiteLoaderBDS ToolChain PeEditor v3.0.0 🥰");
+    logger->info("LiteLoaderBDS ToolChain PeEditor " PE_EDITOR_VERSION " 🥰");
     logger->info("BuildDate CST " __TIMESTAMP__);
 
     // exit if no work to do

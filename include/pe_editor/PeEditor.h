@@ -13,16 +13,19 @@
 
 #include "pe_editor/Pdb.h"
 
+#define PE_EDITOR_VERSION "v3.1.0"
+
 namespace pe_editor {
 
 inline std::shared_ptr<spdlog::logger> logger;
 
 namespace config {
-inline bool genModdedBds  = true;
+inline bool genModdedBds  = false;
 inline bool genDefFile    = false;
 inline bool genLibFile    = false;
 inline bool genSymbolList = false;
-inline bool shouldPause   = true;
+inline bool backupBds     = false;
+inline bool shouldPause   = false;
 inline bool choosePdbFile = false;
 inline bool liteloader3   = false;
 
