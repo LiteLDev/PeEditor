@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
 
     if (config::choosePdbFile) {
         logger->info("Choosing PDB file...");
-        auto title  = L"Choose a PDB file";
+        auto title  = L"Choose a PDB file of bedrock_server.exe";
         auto filter = L"PDB File (*.pdb)\0*.pdb\0Any File (*.*)\0*.*\0";
         auto ret    = ChooseFileUtil::chooseFile(title, filter);
         if (ret.has_value()) {
