@@ -1,20 +1,23 @@
 # PeEditor
 
-_LiteLoaderBDS Toolchain_
+part of _LiteLoaderBDS Toolchain_
+
+> I would like to assure you that our team will improve it to make it more clear and concise after the LL3 refactoring is completed. We welcome any feedback or suggestions you might have for the new branch.
 
 ## Features
 
-1. Generate modded BDS executable file for LiteLoaderBDS
-2. Generate library files for LiteLoaderBDS
-3. Generate def files and symbol list for looking up symbol name and rva
+1. Generate modded BDS executable file works with LiteLoaderBDS
+2. Generate import library files for LiteLoaderBDS and Plugins
+3. Generate .def files and  symbol list that can be used to lookup symbol names and their corresponding RVA (relative virtual address).
 
 ## Usages
 
-### 1. Directly Execute
+### 1. Double click
 
-Will auto load current working dir's bedrock_server.exe and bedrock_server.pdb, and create a bedrock_server_mod.exe.
+This will automatically load the bedrock_server.exe and bedrock_server.pdb files from the current working directory, and proceed to create a modified version of the server called bedrock_server_mod.exe.
 
-### 2. With Argument
+
+### 2. Use command line
 
 ```
 Usage:
@@ -37,7 +40,7 @@ Usage:
 ```
 
 ## What's new
-1. Merged LibraryBuilder to PeEditor
+1. Merged LibraryBuilder into PeEditor
 2. Added more options
-3. Added LiteLoader3 mode
+3. Added support for upcoming LiteLoader v3
 4. Improve process speed
