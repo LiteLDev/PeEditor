@@ -22,6 +22,7 @@ AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakTemplateDeclarations: 'Yes'
 BinPackArguments: false
 BinPackParameters: false
+BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
 ColumnLimit: 120
 CommentPragmas: '^ IWYU pragma:'

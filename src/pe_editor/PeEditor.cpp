@@ -12,11 +12,11 @@
 #include "spdlog/spdlog.h"
 
 #include "pe_editor/ChooseFileUtil.h"
+#include "pe_editor/CxxOptAdder.h"
 #include "pe_editor/FakeSymbol.h"
 #include "pe_editor/Filter.h"
 #include "pe_editor/StringUtils.h"
 
-#include <system_error>
 #include <windows.h>
 
 namespace pe_editor {
@@ -34,28 +34,37 @@ inline void exitWith(int code) {
 inline std::string getPathUtf8(const std::filesystem::path& path) { return StringUtils::wstr2str(path.wstring()); }
 
 void parseArgs(int argc, char** argv) {
+    using cxxopts::value;
+    using std::string;
+
     cxxopts::Options options("PeEditor", "LiteLoaderBDS ToolChain PeEditor " PE_EDITOR_VERSION);
     options.allow_unrecognised_options();
     options.set_width(-1);
-    using cxxopts::value;
-    using std::string;
-    // clang-format off
-    options.add_options()
-        ("m,mod", "Generate bedrock_server_mod.exe (will be true if no arg passed)", value<bool>()->default_value("false"))
-        ("p,pause", "Pause before exit (will be true if no arg passed)", value<bool>()->default_value("false"))
-        ("n,new", "Use LiteLoader v3 preview mode", value<bool>()->default_value("false"))
-        ("b,bak", "Add a suffix \".bak\" to original server exe (will be true if no arg passed)", value<bool>()->default_value("false"))
-        ("d,def", "Generate def files for develop propose", value<bool>()->default_value("false"))
-        ("l,lib", "Generate lib files for develop propose", value<bool>()->default_value("false"))
-        ("s,sym", "Generate symbol list containing symbol and rva", value<bool>()->default_value("false"))
-        ("o,output-dir", "Output dir", value<string>()->default_value("./"))
-        ("exe", "BDS executable file name", value<string>()->default_value("./bedrock_server.exe"))
-        ("pdb", "BDS debug database file name", value<string>()->default_value("./bedrock_server.pdb"))
-        ("c,choose-pdb-file", "Choose PDB file with a window", value<bool>()->default_value("false"))
-        ("v,verbose", "Verbose output", value<bool>()->default_value("false"))
-        ("V,version", "Print version", value<bool>()->default_value("false"))
-        ("h,help", "Print usage");
-    // clang-format on
+
+    CxxOptsAdder(options)
+        .add(
+            "m,mod",
+            "Generate bedrock_server_mod.exe (will be true if no arg passed)",
+            value<bool>()->default_value("false")
+        )
+        .add("p,pause", "Pause before exit (will be true if no arg passed)", value<bool>()->default_value("false"))
+        .add("n,new", "Use LiteLoader v3 preview mode", value<bool>()->default_value("false"))
+        .add(
+            "b,bak",
+            "Add a suffix \".bak\" to original server exe (will be true if no arg passed)",
+            value<bool>()->default_value("false")
+        )
+        .add("d,def", "Generate def files for develop propose", value<bool>()->default_value("false"))
+        .add("l,lib", "Generate lib files for develop propose", value<bool>()->default_value("false"))
+        .add("s,sym", "Generate symbol list containing symbol and rva", value<bool>()->default_value("false"))
+        .add("o,output-dir", "Output dir", value<string>()->default_value("./"))
+        .add("exe", "BDS executable file name", value<string>()->default_value("./bedrock_server.exe"))
+        .add("pdb", "BDS debug database file name", value<string>()->default_value("./bedrock_server.pdb"))
+        .add("c,choose-pdb-file", "Choose PDB file with a window", value<bool>()->default_value("false"))
+        .add("v,verbose", "Verbose output", value<bool>()->default_value("false"))
+        .add("V,version", "Print version", value<bool>()->default_value("false"))
+        .add("h,help", "Print usage");
+
     auto optionsResult = options.parse(argc, argv);
 
     if (optionsResult.count("help")) {
@@ -252,9 +261,9 @@ int generateModdedBds() {
     auto                            exportOrdinal = data::originBds.ordinalBase + 1;
     std::unordered_set<std::string> exportedFunctionsNames;
 
-    auto names = originBds.exportedFunctions |
-                 std::views::filter([](const exported_function& fn) { return fn.has_name(); }) |
-                 std::views::transform([](const exported_function& fn) { return fn.get_name(); });
+    auto names = originBds.exportedFunctions
+                 | std::views::filter([](const exported_function& fn) { return fn.has_name(); })
+                 | std::views::transform([](const exported_function& fn) { return fn.get_name(); });
     std::ranges::copy(names, std::inserter(exportedFunctionsNames, exportedFunctionsNames.end()));
 
     auto filtered = data::filteredSymbols | std::views::filter([&](const PdbSymbol& symbol) {
