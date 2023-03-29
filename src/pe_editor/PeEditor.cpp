@@ -74,7 +74,7 @@ void parseArgs(int argc, char** argv) {
 
     if (optionsResult.count("version")) {
         logger->info("LiteLoaderBDS ToolChain PeEditor");
-        logger->info("BuildDate CST " __TIMESTAMP__);
+        logger->info("Build Date CST " __TIMESTAMP__);
         exit(0);
     }
 
@@ -114,12 +114,12 @@ int generateDefFile() {
     logger->info("Generating def files...");
     defFiles.apiFile.open(config::outputDir / config::defApiFile, std::ios::ate | std::ios::out);
     if (!defFiles.apiFile) {
-        logger->error("Cannot create bedrock_server_api.def");
+        logger->error("Cannot create bedrock_server_api.def.");
         return -1;
     }
     defFiles.varFile.open(config::outputDir / config::defVarFile, std::ios::ate | std::ios::out);
     if (!defFiles.varFile) {
-        logger->error("Cannot create bedrock_server_var.def");
+        logger->error("Cannot create bedrock_server_var.def.");
         return -1;
     }
     defFiles.apiFile << "LIBRARY bedrock_server.dll\nEXPORTS\n";
@@ -172,7 +172,7 @@ int generateLibFile() {
         true
     );
     if (ret) {
-        logger->error("Cannot create bedrock_server_api.lib");
+        logger->error("Cannot create bedrock_server_api.lib.");
         return -1;
     }
     logger->info("Generated bedrock_server_api.lib successfully.");
@@ -184,7 +184,7 @@ int generateLibFile() {
         true
     );
     if (ret) {
-        logger->error("Cannot create bedrock_server_var.lib");
+        logger->error("Cannot create bedrock_server_var.lib.");
         return -1;
     }
     logger->info("Generated bedrock_server_var.lib successfully.");
@@ -199,7 +199,7 @@ int generateSymbolListFile() {
     logger->info("Generating symbol list file...");
     symbolListFile.open(config::outputDir / config::symbolListFile, std::ios::ate | std::ios::out);
     if (!symbolListFile) {
-        logger->error("Cannot create Symbol List File");
+        logger->error("Cannot create symbol list file.");
         return -1;
     }
     std::ranges::for_each(*symbols, [&](const PdbSymbol& fn) {
@@ -241,10 +241,10 @@ int generateModdedBds() {
         return 0;
     }
 
-    logger->info("Loading bedrock_server.exe...");
+    logger->info("Loading BDS executable file...");
     originBds.file.open(config::bdsExePath, std::ios::in | std::ios::binary);
     if (!data::originBds.file) {
-        logger->error("Failed to Open bedrock_server.exe");
+        logger->error("Failed to open BDS executable file.");
         return -1;
     }
     try {
@@ -252,11 +252,11 @@ int generateModdedBds() {
         originBds.exportedFunctions = get_exported_functions(*originBds.pe, originBds.exportInfo);
         originBds.ordinalBase       = get_export_ordinal_limits(originBds.exportedFunctions).second;
     } catch (const pe_exception& e) {
-        logger->error("Failed to parse bedrock_server.exe: {}", e.what());
+        logger->error("Failed to parse BDS executable file: {}", e.what());
         return -1;
     }
-    logger->info("Loaded bedrock_server.exe successfully.");
-    logger->info("Generating modded bedrock_server.exe...");
+    logger->info("Loaded BDS executable file successfully.");
+    logger->info("Generating modified BDS executable file...");
 
     auto                            exportOrdinal = data::originBds.ordinalBase + 1;
     std::unordered_set<std::string> exportedFunctionsNames;
@@ -277,14 +277,14 @@ int generateModdedBds() {
         func.set_rva(symbol.rva);
         func.set_ordinal(exportOrdinal++);
         if (exportOrdinal > 65535) {
-            logger->error("Too many Symbols to insert to ExportTable");
+            logger->error("Too many symbols to insert to ExportTable.");
             return -1;
         }
         originBds.exportedFunctions.push_back(func);
     }
     std::ofstream moddedBds(config::outputDir / "bedrock_server_mod.exe", std::ios::binary);
     if (!moddedBds) {
-        logger->error("Cannot create modded bedrock_server.exe");
+        logger->error("Cannot create modifed BDS executable file.");
         return -1;
     }
     try {
@@ -314,7 +314,7 @@ int generateModdedBds() {
 
         moddedBds.close();
         originBds.file.close();
-        logger->info("Generated bedrock_server_mod.exe successfully.");
+        logger->info("Generated modified BDS executable file successfully.");
 
         if (!config::backupBds) {
             return 0;
@@ -325,13 +325,13 @@ int generateModdedBds() {
         newBdsPath.replace_extension(L".exe.bak");
         std::filesystem::rename(config::bdsExePath, newBdsPath, ec);
         if (ec) {
-            logger->error("Failed to backup bedrock_server.exe: {}", ec.message());
+            logger->error("Failed to backup BDS executable file: {}", ec.message());
             return -1;
         }
-        logger->info("Backed up bedrock_server.exe successfully.");
+        logger->info("Backed up BDS executable file successfully.");
 
     } catch (pe_bliss::pe_exception& e) {
-        logger->error("Failed to rebuild bedrock_server_mod.exe: {}", e.what());
+        logger->error("Failed to build modified BDS executable file: {}", e.what());
         moddedBds.close();
         originBds.file.close();
         std::filesystem::remove(config::outputDir / "bedrock_server_mod.exe");
@@ -359,8 +359,8 @@ int main(int argc, char** argv) {
         config::shouldPause  = true;
     }
 
-    logger->info("LiteLoaderBDS ToolChain PeEditor " PE_EDITOR_VERSION " 🥰");
-    logger->info("BuildDate CST " __TIMESTAMP__);
+    logger->info("LiteLoaderBDS ToolChain PeEditor " PE_EDITOR_VERSION);
+    logger->info("Build Date CST " __TIMESTAMP__);
 
     // exit if no work to do
     if (!config::genModdedBds && !config::genLibFile && !config::genDefFile && !config::genSymbolList) {
@@ -378,14 +378,16 @@ int main(int argc, char** argv) {
         }
     }
 
-    logger->info("LiteLoader v3 mode: \t\t[{}]", config::liteloader3);
-    logger->info("BDS Executable File: \t\t[{}]", getPathUtf8(config::bdsExePath.wstring()));
-    logger->info("BDS PDB File: \t\t\t[{}]", getPathUtf8(config::bdsPdbPath.wstring()));
-    logger->info("Output Dir: \t\t\t[{}]", getPathUtf8(config::outputDir.wstring()));
-    logger->info("Generate bedrock_server_mod.exe: \t[{}]", config::genModdedBds);
-    logger->info("Generate def files: \t\t[{}]", config::genDefFile);
-    logger->info("Generate lib files: \t\t[{}]", config::genLibFile);
-    logger->info("Generate symbol list file: \t[{}]", config::genSymbolList);
+    logger->info("Configurations:");
+    logger->info("\tLiteLoader v3 Mode: \t\t[{}]", config::liteloader3);
+    logger->info("\tBDS Executable File: \t\t[{}]", getPathUtf8(config::bdsExePath.wstring()));
+    logger->info("\tBDS PDB File: \t\t\t[{}]", getPathUtf8(config::bdsPdbPath.wstring()));
+    logger->info("\tOutput Dir: \t\t\t[{}]", getPathUtf8(config::outputDir.wstring()));
+    logger->info("Targets:");
+    logger->info("\tModified BDS Executable: \t[{}]", config::genModdedBds);
+    logger->info("\tModule Definition Files: \t[{}]", config::genDefFile);
+    logger->info("\tImport Library Files: \t\t[{}]", config::genLibFile);
+    logger->info("\tSymbol List File: \t\t[{}]", config::genSymbolList);
 
     logger->info("Loading PDB file...");
     data::symbols = loadPDB(config::bdsPdbPath.wstring().c_str());
@@ -393,7 +395,7 @@ int main(int argc, char** argv) {
         logger->error("Failed to load PDB file.");
         exitWith(-1);
     }
-    logger->info("Loaded {} Symbols.", data::symbols->size());
+    logger->info("Loaded {} symbols.", data::symbols->size());
 
     if (auto ret = generateSymbolListFile()) {
         exitWith(ret);
@@ -402,7 +404,7 @@ int main(int argc, char** argv) {
     if (config::genModdedBds || config::genDefFile || config::genLibFile) {
         logger->info("Filtering symbols...");
         std::ranges::copy_if(*data::symbols, std::back_inserter(data::filteredSymbols), filterSymbols);
-        logger->info("Filtered {} Symbols.", data::filteredSymbols.size());
+        logger->info("Filtered {} symbols.", data::filteredSymbols.size());
     }
 
     if (auto ret = generateDefFile()) {
