@@ -67,6 +67,14 @@ void parseArgs(int argc, char** argv) {
 
     auto optionsResult = options.parse(argc, argv);
 
+    if (!optionsResult.unmatched().empty()) {
+        std::cout << "Unknown options: " << std::endl;
+        for (const auto& t : optionsResult.unmatched()) {
+            std::cout << "\t" << t << std::endl;
+        }
+        exit(-1);
+    }
+
     if (optionsResult.count("help")) {
         std::cout << options.help() << std::endl;
         exit(0);
