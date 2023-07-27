@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <iostream>
 #include <ranges>
+#include <regex>
 #include <string_view>
 
 #include "cxxopts.hpp"
@@ -17,6 +18,7 @@
 #include "pe_editor/Filter.h"
 #include "pe_editor/StringUtils.h"
 
+#include <vector>
 #include <windows.h>
 
 namespace pe_editor {
@@ -198,7 +200,20 @@ int generateLibFile() {
     logger->info("Generated bedrock_server_var.lib successfully.");
     return 0;
 }
-
+void processSymbol(std::string& symbol) {
+    logger->info("process symbol");
+    const std::pair<std::string, std::string> replceList[] = {
+        {"std::basic_string<char, struct std::char_traits<char>, class std::allocator<char>>",         "std::string"     },
+        {"std::basic_string_view<char, struct std::char_traits<char>>",                                "std::string_view"},
+        {"std::basic_string<wchar_t, struct std::char_traits<wchar_t>, class std::allocator<wchar_t>", "std::wstring"    },
+        {"__int64",                                                                                    "long long"       }
+    };
+    for (auto& rep : replceList) {
+        while (symbol.find(rep.first) != symbol.npos) {
+            symbol.replace(symbol.find(rep.first), rep.first.size(), rep.second);
+        }
+    }
+}
 int generateSymbolListFile() {
     using namespace data;
     if (!config::genSymbolList) {
@@ -223,7 +238,9 @@ int generateSymbolListFile() {
         if (!demangledName) {
             demangledName = _strdup("Failed to demangle.");
         }
-        symbolListFile << fmt::format("[{:08x}] {}\n{}\n\n", fn.rva, fn.name, demangledName);
+        std::string _demangledName = demangledName;
+        processSymbol(_demangledName);
+        symbolListFile << fmt::format("[{:08x}] {}\n{}\n\n", fn.rva, fn.name, _demangledName);
         free(demangledName);
     });
     symbolListFile.flush();
