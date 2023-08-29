@@ -157,29 +157,24 @@ int generateLibFile() {
     std::vector<llvm::object::COFFShortExport> VarExports;
     std::ranges::for_each(filteredSymbols, [&](const PdbSymbol& symbol) {
         llvm::object::COFFShortExport record;
-
         record.Name = symbol.name;
         if (!symbol.isFunction) {
             VarExports.push_back(record);
             return;
         }
-
         ApiExports.push_back(record);
 
         auto fakeSymbol = pe_editor::FakeSymbol::getFakeSymbol(symbol.name);
-        if (!fakeSymbol.has_value()) {
-            return;
+        if (fakeSymbol.has_value()) {
+            record.Name = fakeSymbol.value();
+            ApiExports.push_back(record);
         }
-        llvm::object::COFFShortExport fakeRecord;
-        fakeRecord.Name = fakeSymbol.value();
-        ApiExports.push_back(fakeRecord);
 
-        fakeSymbol = pe_editor::FakeSymbol::getFakeSymbol(fakeSymbol.value(), true);
-        if (!fakeSymbol.has_value()) {
-            return;
+        fakeSymbol = pe_editor::FakeSymbol::getFakeSymbol(symbol.name, true);
+        if (fakeSymbol.has_value()) {
+            record.Name = fakeSymbol.value();
+            ApiExports.push_back(record);
         }
-        fakeRecord.Name = fakeSymbol.value();
-        ApiExports.push_back(fakeRecord);
     });
 
     auto err = llvm::object::writeImportLibrary(
