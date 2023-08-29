@@ -1,13 +1,11 @@
 #include "pe_editor/PdbReader.h"
 
-#include <cstdio>
-#include <fstream>
-#include <iostream>
-
 #include "PDB.h"
 #include "PDB_DBIStream.h"
 #include "PDB_InfoStream.h"
 #include "PDB_RawFile.h"
+
+#include "PeEditor.h"
 
 #include <windows.h>
 
@@ -58,36 +56,34 @@ void Close(Handle& handle) {
 }
 } // namespace MemoryMappedFile
 namespace {
-PDB_NO_DISCARD static bool IsError(PDB::ErrorCode errorCode) {
+inline bool IsError(PDB::ErrorCode errorCode) {
+    using pe_editor::logger;
     switch (errorCode) {
     case PDB::ErrorCode::Success:
         return false;
-
     case PDB::ErrorCode::InvalidSuperBlock:
-        std::cerr << "[PDB] Invalid Superblock" << std::endl;
+        logger->error("[PDB] Invalid SuperBlock");
         return true;
-
     case PDB::ErrorCode::InvalidFreeBlockMap:
-        std::cerr << "[PDB] Invalid free block map" << std::endl;
-        ;
+        logger->error("[PDB] Invalid free block map");
         return true;
-
     case PDB::ErrorCode::InvalidSignature:
-        std::cerr << "[PDB] Invalid stream signature" << std::endl;
+        logger->error("[PDB] Invalid signature");
         return true;
-
     case PDB::ErrorCode::InvalidStreamIndex:
-        std::cerr << "[PDB] Invalid stream index" << std::endl;
+        logger->error("[PDB] Invalid stream index");
         return true;
-
     case PDB::ErrorCode::UnknownVersion:
-        std::cerr << "[PDB] Unknown version" << std::endl;
+        logger->error("[PDB] Unknown version");
         return true;
+    case PDB::ErrorCode::InvalidStream:
+        logger->error("[PDB] Invalid stream");
+        break;
     }
     return true;
 }
 
-PDB_NO_DISCARD static bool HasValidDBIStreams(const PDB::RawFile& rawPdbFile, const PDB::DBIStream& dbiStream) {
+inline bool HasValidDBIStreams(const PDB::RawFile& rawPdbFile, const PDB::DBIStream& dbiStream) {
     if (IsError(dbiStream.HasValidImageSectionStream(rawPdbFile)))
         return false;
     if (IsError(dbiStream.HasValidPublicSymbolStream(rawPdbFile)))
@@ -107,7 +103,6 @@ std::unique_ptr<deque<PdbSymbol>> loadFunctions(const PDB::RawFile& rawPdbFile, 
     const PDB::PublicSymbolStream publicSymbolStream = dbiStream.CreatePublicSymbolStream(rawPdbFile);
 
     const PDB::ArrayView<PDB::HashRecord> hashRecords = publicSymbolStream.GetRecords();
-    const size_t                          count       = hashRecords.GetLength();
 
     for (const PDB::HashRecord& hashRecord : hashRecords) {
         const PDB::CodeView::DBI::Record* record = publicSymbolStream.GetRecord(symbolRecordStream, hashRecord);
