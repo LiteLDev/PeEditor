@@ -122,6 +122,7 @@ jobs:
             peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.exe
             peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.pdb
           body: |
+            ---
             | File                                          | SHA256                |
             | :-------------------------------------------- | :-------------------- |
             | peeditor-${{ env.VERSION }}-windows-amd64.zip | ${{ env.ZIP_SHA256 }} |
