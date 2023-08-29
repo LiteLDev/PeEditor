@@ -4,16 +4,13 @@
 #include <fstream>
 #include <memory>
 
-// fuck windows.h
 #include "llvm/Object/COFF.h"
 #include "llvm/Object/COFFImportFile.h"
 
 #include "pe_bliss/pe_bliss.h"
 #include "spdlog/spdlog.h"
 
-#include "pe_editor/Pdb.h"
-
-#define PE_EDITOR_VERSION "v3.2.0"
+#include "pe_editor/PdbReader.h"
 
 namespace pe_editor {
 

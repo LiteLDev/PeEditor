@@ -157,12 +157,15 @@ int generateLibFile() {
     std::vector<llvm::object::COFFShortExport> VarExports;
     std::ranges::for_each(filteredSymbols, [&](const PdbSymbol& symbol) {
         llvm::object::COFFShortExport record;
+
         record.Name = symbol.name;
         if (!symbol.isFunction) {
             VarExports.push_back(record);
             return;
         }
+
         ApiExports.push_back(record);
+
         auto fakeSymbol = pe_editor::FakeSymbol::getFakeSymbol(symbol.name);
         if (!fakeSymbol.has_value()) {
             return;
@@ -170,28 +173,35 @@ int generateLibFile() {
         llvm::object::COFFShortExport fakeRecord;
         fakeRecord.Name = fakeSymbol.value();
         ApiExports.push_back(fakeRecord);
+
+        fakeSymbol = pe_editor::FakeSymbol::getFakeSymbol(fakeSymbol.value(), true);
+        if (!fakeSymbol.has_value()) {
+            return;
+        }
+        fakeRecord.Name = fakeSymbol.value();
+        ApiExports.push_back(fakeRecord);
     });
 
-    auto ret = llvm::object::writeImportLibrary(
+    auto err = llvm::object::writeImportLibrary(
         "bedrock_server.dll",
         (config::outputDir / config::libApiFile).string(),
         ApiExports,
         static_cast<llvm::COFF::MachineTypes>(IMAGE_FILE_MACHINE_AMD64),
         true
     );
-    if (ret) {
+    if (err) {
         logger->error("Cannot create bedrock_server_api.lib.");
         return -1;
     }
     logger->info("Generated bedrock_server_api.lib successfully.");
-    ret = llvm::object::writeImportLibrary(
+    err = llvm::object::writeImportLibrary(
         "bedrock_server_mod.exe",
         (config::outputDir / config::libVarFile).string(),
         VarExports,
         static_cast<llvm::COFF::MachineTypes>(IMAGE_FILE_MACHINE_AMD64),
         true
     );
-    if (ret) {
+    if (err) {
         logger->error("Cannot create bedrock_server_var.lib.");
         return -1;
     }
@@ -233,13 +243,13 @@ int generateSymbolListFile() {
 }
 
 struct ImportDllName {
-    static constexpr const char* liteloader2 = "LLPreLoader.dll";
-    static constexpr const char* liteloader3 = "PreLoader.dll";
+    static constexpr auto liteloader2 = "LLPreLoader.dll";
+    static constexpr auto liteloader3 = "PreLoader.dll";
 };
 
 struct ImportFunctionName {
-    static constexpr const char* liteloader2 = "dlsym_real";
-    static constexpr const char* liteloader3 = "pl_resolve_symbol";
+    static constexpr auto liteloader2 = "dlsym_real";
+    static constexpr auto liteloader3 = "pl_resolve_symbol";
 };
 
 int generateModdedBds() {

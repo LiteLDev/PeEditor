@@ -1,4 +1,4 @@
-#include "pe_editor/Pdb.h"
+#include "pe_editor/PdbReader.h"
 
 #include <cstdio>
 #include <fstream>
