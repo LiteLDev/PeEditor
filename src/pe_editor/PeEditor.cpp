@@ -228,7 +228,25 @@ int generateSymbolListFile() {
         if (!demangledName) {
             demangledName = _strdup("Failed to demangle.");
         }
-        symbolListFile << fmt::format("[{:08x}] {}\n{}\n\n", fn.rva, fn.name, demangledName);
+
+        auto processSymbol = [](auto s) {
+            std::string                               symbol       = s;
+            const std::pair<std::string, std::string> replceList[] = {
+                {"std::basic_string<char, struct std::char_traits<char>, class std::allocator<char>>",         "std::string"     },
+                {"std::basic_string_view<char, struct std::char_traits<char>>",                                "std::string_view"},
+                {"std::basic_string<wchar_t, struct std::char_traits<wchar_t>, class std::allocator<wchar_t>",
+                 "std::wstring"                                                                                                  },
+                {"__int64",                                                                                    "long long"       }
+            };
+            for (auto& rep : replceList) {
+                while (symbol.find(rep.first) != symbol.npos) {
+                    symbol.replace(symbol.find(rep.first), rep.first.size(), rep.second);
+                }
+            }
+            return symbol;
+        };
+
+        symbolListFile << fmt::format("[{:08x}] {}\n{}\n\n", fn.rva, fn.name, processSymbol(demangledName));
         free(demangledName);
     });
     symbolListFile.flush();
