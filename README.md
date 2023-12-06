@@ -1,11 +1,11 @@
 # PeEditor
 
-_part of LiteLoaderBDS Toolchain_
+_part of LeviLamina Toolchain_
 
 ## Features
 
-1. Generate modified BDS executable file for LiteLoaderBDS
-2. Generate import library files for LiteLoaderBDS and Plugins
+1. Generate modified BDS executable file for LeviLamina
+2. Generate import library files for LeviLamina and Plugins
 3. Generate .def files and a symbol list for looking up symbol names with corresponding RVA
 
 ## Usages
@@ -18,12 +18,13 @@ This will automatically load the bedrock_server.exe and bedrock_server.pdb files
 ### 2. Use a Command Line
 
 ```
+LeviLamina ToolChain PeEditor v3.4.1
 Usage:
   PeEditor [OPTION...]
 
   -m, --mod              Generate bedrock_server_mod.exe (will be true if no arg passed)
   -p, --pause            Pause before exit (will be true if no arg passed)
-  -n, --new              Use LiteLoader v3 preview mode
+  -O, --old              Use old mode for LiteLoaderBDS
   -b, --bak              Add a suffix ".bak" to original server exe (will be true if no arg passed)
   -d, --def              Generate def files for develop propose
   -l, --lib              Generate lib files for develop propose
@@ -40,5 +41,4 @@ Usage:
 ## What's New
 1. Merged LibraryBuilder into PeEditor
 2. Added more options
-3. Added support for upcoming LiteLoader v3
-4. Improve process speed
+3. Improve process speed

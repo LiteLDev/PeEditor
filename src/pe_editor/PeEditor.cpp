@@ -36,7 +36,7 @@ void parseArgs(int argc, char** argv) {
     using cxxopts::value;
     using std::string;
 
-    cxxopts::Options options("PeEditor", "LiteLoaderBDS ToolChain PeEditor " PE_EDITOR_VERSION);
+    cxxopts::Options options("PeEditor", "LeviLamina ToolChain PeEditor " PE_EDITOR_VERSION);
     options.allow_unrecognised_options();
     options.set_width(-1);
 
@@ -47,7 +47,7 @@ void parseArgs(int argc, char** argv) {
             value<bool>()->default_value("false")
         )
         .add("p,pause", "Pause before exit (will be true if no arg passed)", value<bool>()->default_value("false"))
-        .add("O,old", "Use old mode for LiteLoaderBDS", value<bool>()->default_value("false"))
+        .add("O,old", "Use old mode for LeviLamina", value<bool>()->default_value("false"))
         .add(
             "b,bak",
             "Add a suffix \".bak\" to original server exe (will be true if no arg passed)",
@@ -80,7 +80,7 @@ void parseArgs(int argc, char** argv) {
     }
 
     if (optionsResult.count("version")) {
-        logger->info("LiteLoaderBDS ToolChain PeEditor");
+        logger->info("LeviLamina ToolChain PeEditor");
         logger->info("Build Date CST " __TIMESTAMP__);
         exit(0);
     }
@@ -370,7 +370,7 @@ int main(int argc, char** argv) {
         config::shouldPause  = true;
     }
 
-    logger->info("LiteLoaderBDS ToolChain PeEditor " PE_EDITOR_VERSION);
+    logger->info("LeviLamina ToolChain PeEditor " PE_EDITOR_VERSION);
     logger->info("Build Date CST " __TIMESTAMP__);
 
     // exit if no work to do
