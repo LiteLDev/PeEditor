@@ -8,7 +8,8 @@ class CxxOptsAdder {
 
 public:
     inline CxxOptsAdder(cxxopts::Options& options, const std::string& groupName = "")
-    : options(options), adder(options.add_options(groupName)) {}
+    : options(options),
+      adder(options.add_options(groupName)) {}
 
     inline CxxOptsAdder&
     add(const std::string&                           opts,

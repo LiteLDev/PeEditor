@@ -22,8 +22,7 @@
 namespace pe_editor {
 
 inline void pause() {
-    if (config::shouldPause)
-        system("pause");
+    if (config::shouldPause) system("pause");
 }
 
 inline void exitWith(int code) {
@@ -48,7 +47,7 @@ void parseArgs(int argc, char** argv) {
             value<bool>()->default_value("false")
         )
         .add("p,pause", "Pause before exit (will be true if no arg passed)", value<bool>()->default_value("false"))
-        .add("n,new", "Use LiteLoader v3 preview mode", value<bool>()->default_value("false"))
+        .add("O,old", "Use old mode for LiteLoaderBDS", value<bool>()->default_value("false"))
         .add(
             "b,bak",
             "Add a suffix \".bak\" to original server exe (will be true if no arg passed)",
@@ -97,7 +96,7 @@ void parseArgs(int argc, char** argv) {
     config::backupBds     = optionsResult["bak"].as<bool>();
     config::shouldPause   = optionsResult["pause"].as<bool>();
     config::choosePdbFile = optionsResult["choose-pdb-file"].as<bool>();
-    config::liteloader3   = optionsResult["new"].as<bool>();
+    config::oldMode       = optionsResult["old"].as<bool>();
     config::outputDir     = optionsResult["output-dir"].as<std::string>();
     config::bdsExePath    = optionsResult["exe"].as<std::string>();
     config::bdsPdbPath    = optionsResult["pdb"].as<std::string>();
@@ -108,8 +107,7 @@ bool filterSymbols(const PdbSymbol& symbol) {
         return false;
     }
     for (const auto& a : pe_editor::filter::prefix) {
-        if (symbol.name.starts_with(a))
-            return false;
+        if (symbol.name.starts_with(a)) return false;
     }
     return !pe_editor::filter::matchSkip(symbol.name);
 }
@@ -239,12 +237,12 @@ int generateSymbolListFile() {
 
 struct ImportDllName {
     static constexpr auto liteloader2 = "LLPreLoader.dll";
-    static constexpr auto liteloader3 = "PreLoader.dll";
+    static constexpr auto levilamina  = "PreLoader.dll";
 };
 
 struct ImportFunctionName {
     static constexpr auto liteloader2 = "dlsym_real";
-    static constexpr auto liteloader3 = "pl_resolve_symbol";
+    static constexpr auto levilamina  = "pl_resolve_symbol";
 };
 
 int generateModdedBds() {
@@ -275,8 +273,8 @@ int generateModdedBds() {
     std::unordered_set<std::string> exportedFunctionsNames;
 
     auto names = originBds.exportedFunctions
-                 | std::views::filter([](const exported_function& fn) { return fn.has_name(); })
-                 | std::views::transform([](const exported_function& fn) { return fn.get_name(); });
+               | std::views::filter([](const exported_function& fn) { return fn.has_name(); })
+               | std::views::transform([](const exported_function& fn) { return fn.get_name(); });
     std::ranges::copy(names, std::inserter(exportedFunctionsNames, exportedFunctionsNames.end()));
 
     auto filtered = data::filteredSymbols | std::views::filter([&](const PdbSymbol& symbol) {
@@ -315,9 +313,9 @@ int generateModdedBds() {
         imported_functions_list imports = get_imported_functions(*originBds.pe);
         import_library          preLoader;
         imported_function       func;
-        func.set_name(config::liteloader3 ? ImportFunctionName::liteloader3 : ImportFunctionName::liteloader2);
+        func.set_name(!config::oldMode ? ImportFunctionName::levilamina : ImportFunctionName::liteloader2);
         func.set_iat_va(0x1);
-        preLoader.set_name(config::liteloader3 ? ImportDllName::liteloader3 : ImportDllName::liteloader2);
+        preLoader.set_name(!config::oldMode ? ImportDllName::levilamina : ImportDllName::liteloader2);
         preLoader.add_import(func);
         imports.push_back(preLoader);
         section& attachedImportedSection = originBds.pe->add_section(ImportSection);
@@ -392,7 +390,7 @@ int main(int argc, char** argv) {
     }
 
     logger->info("Configurations:");
-    logger->info("\tLiteLoader v3 Mode: \t\t[{}]", config::liteloader3);
+    logger->info("\tOld Mode: \t\t\t[{}]", config::oldMode);
     logger->info("\tBDS Executable File: \t\t[{}]", getPathUtf8(config::bdsExePath.wstring()));
     logger->info("\tBDS PDB File: \t\t\t[{}]", getPathUtf8(config::bdsPdbPath.wstring()));
     logger->info("\tOutput Dir: \t\t\t[{}]", getPathUtf8(config::outputDir.wstring()));

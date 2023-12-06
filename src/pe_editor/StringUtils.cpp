@@ -3,7 +3,7 @@
 #include <Windows.h>
 
 namespace pe_editor::StringUtils {
-std::wstring str2wstr(std::string_view str, UINT codePage) {
+std::wstring str2wstr(std::string_view str, uint codePage) {
     int          size = MultiByteToWideChar(codePage, 0, str.data(), static_cast<int>(str.size()), nullptr, 0);
     std::wstring wstr(size, 0);
     MultiByteToWideChar(codePage, 0, str.data(), static_cast<int>(str.size()), wstr.data(), size);

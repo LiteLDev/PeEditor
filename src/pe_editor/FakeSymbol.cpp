@@ -7,38 +7,22 @@ namespace pe_editor::FakeSymbol {
 inline demangler::ms_demangle::SpecialIntrinsicKind consumeSpecialIntrinsicKind(StringView& MangledName) {
     using namespace demangler::ms_demangle;
     using namespace demangler;
-    if (MangledName.consumeFront("?_7"))
-        return SpecialIntrinsicKind::Vftable;
-    if (MangledName.consumeFront("?_8"))
-        return SpecialIntrinsicKind::Vbtable;
-    if (MangledName.consumeFront("?_9"))
-        return SpecialIntrinsicKind::VcallThunk;
-    if (MangledName.consumeFront("?_A"))
-        return SpecialIntrinsicKind::Typeof;
-    if (MangledName.consumeFront("?_B"))
-        return SpecialIntrinsicKind::LocalStaticGuard;
-    if (MangledName.consumeFront("?_C"))
-        return SpecialIntrinsicKind::StringLiteralSymbol;
-    if (MangledName.consumeFront("?_P"))
-        return SpecialIntrinsicKind::UdtReturning;
-    if (MangledName.consumeFront("?_R0"))
-        return SpecialIntrinsicKind::RttiTypeDescriptor;
-    if (MangledName.consumeFront("?_R1"))
-        return SpecialIntrinsicKind::RttiBaseClassDescriptor;
-    if (MangledName.consumeFront("?_R2"))
-        return SpecialIntrinsicKind::RttiBaseClassArray;
-    if (MangledName.consumeFront("?_R3"))
-        return SpecialIntrinsicKind::RttiClassHierarchyDescriptor;
-    if (MangledName.consumeFront("?_R4"))
-        return SpecialIntrinsicKind::RttiCompleteObjLocator;
-    if (MangledName.consumeFront("?_S"))
-        return SpecialIntrinsicKind::LocalVftable;
-    if (MangledName.consumeFront("?__E"))
-        return SpecialIntrinsicKind::DynamicInitializer;
-    if (MangledName.consumeFront("?__F"))
-        return SpecialIntrinsicKind::DynamicAtexitDestructor;
-    if (MangledName.consumeFront("?__J"))
-        return SpecialIntrinsicKind::LocalStaticThreadGuard;
+    if (MangledName.consumeFront("?_7")) return SpecialIntrinsicKind::Vftable;
+    if (MangledName.consumeFront("?_8")) return SpecialIntrinsicKind::Vbtable;
+    if (MangledName.consumeFront("?_9")) return SpecialIntrinsicKind::VcallThunk;
+    if (MangledName.consumeFront("?_A")) return SpecialIntrinsicKind::Typeof;
+    if (MangledName.consumeFront("?_B")) return SpecialIntrinsicKind::LocalStaticGuard;
+    if (MangledName.consumeFront("?_C")) return SpecialIntrinsicKind::StringLiteralSymbol;
+    if (MangledName.consumeFront("?_P")) return SpecialIntrinsicKind::UdtReturning;
+    if (MangledName.consumeFront("?_R0")) return SpecialIntrinsicKind::RttiTypeDescriptor;
+    if (MangledName.consumeFront("?_R1")) return SpecialIntrinsicKind::RttiBaseClassDescriptor;
+    if (MangledName.consumeFront("?_R2")) return SpecialIntrinsicKind::RttiBaseClassArray;
+    if (MangledName.consumeFront("?_R3")) return SpecialIntrinsicKind::RttiClassHierarchyDescriptor;
+    if (MangledName.consumeFront("?_R4")) return SpecialIntrinsicKind::RttiCompleteObjLocator;
+    if (MangledName.consumeFront("?_S")) return SpecialIntrinsicKind::LocalVftable;
+    if (MangledName.consumeFront("?__E")) return SpecialIntrinsicKind::DynamicInitializer;
+    if (MangledName.consumeFront("?__F")) return SpecialIntrinsicKind::DynamicAtexitDestructor;
+    if (MangledName.consumeFront("?__J")) return SpecialIntrinsicKind::LocalStaticThreadGuard;
     return SpecialIntrinsicKind::None;
 }
 
@@ -49,13 +33,11 @@ std::optional<std::string> getFakeSymbol(const std::string& fn, bool removeVirtu
     Demangler  demangler;
     StringView name(fn.c_str());
 
-    if (!name.consumeFront('?'))
-        return std::nullopt;
+    if (!name.consumeFront('?')) return std::nullopt;
 
     SpecialIntrinsicKind specialIntrinsicKind = consumeSpecialIntrinsicKind(name);
 
-    if (specialIntrinsicKind != SpecialIntrinsicKind::None)
-        return std::nullopt;
+    if (specialIntrinsicKind != SpecialIntrinsicKind::None) return std::nullopt;
 
     SymbolNode* symbolNode = demangler.demangleDeclarator(name);
     if (symbolNode == nullptr

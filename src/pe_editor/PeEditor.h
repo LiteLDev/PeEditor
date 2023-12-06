@@ -24,7 +24,7 @@ inline bool genSymbolList = false;
 inline bool backupBds     = false;
 inline bool shouldPause   = false;
 inline bool choosePdbFile = false;
-inline bool liteloader3   = false;
+inline bool oldMode       = false;
 
 inline std::filesystem::path outputDir;
 inline std::filesystem::path bdsExePath;

@@ -4,10 +4,10 @@
 
 namespace pe_editor::StringUtils {
 
-using UINT = unsigned int;
-#define CP_UTF8 65001
+using uint          = unsigned int;
+constexpr uint UTF8 = 65001;
 
-std::wstring str2wstr(std::string_view str, UINT codePage = CP_UTF8);
+std::wstring str2wstr(std::string_view str, uint codePage = UTF8);
 
 std::string wstr2str(std::wstring_view wstr);
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <deque>
+#include <memory>
 #include <string>
 #include <utility>
-#include <memory>
 
 struct PdbSymbol {
     std::string name;

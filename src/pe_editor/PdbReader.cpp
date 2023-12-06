@@ -84,14 +84,10 @@ inline bool IsError(PDB::ErrorCode errorCode) {
 }
 
 inline bool HasValidDBIStreams(const PDB::RawFile& rawPdbFile, const PDB::DBIStream& dbiStream) {
-    if (IsError(dbiStream.HasValidImageSectionStream(rawPdbFile)))
-        return false;
-    if (IsError(dbiStream.HasValidPublicSymbolStream(rawPdbFile)))
-        return false;
-    if (IsError(dbiStream.HasValidGlobalSymbolStream(rawPdbFile)))
-        return false;
-    if (IsError(dbiStream.HasValidSectionContributionStream(rawPdbFile)))
-        return false;
+    if (IsError(dbiStream.HasValidImageSectionStream(rawPdbFile))) return false;
+    if (IsError(dbiStream.HasValidPublicSymbolStream(rawPdbFile))) return false;
+    if (IsError(dbiStream.HasValidGlobalSymbolStream(rawPdbFile))) return false;
+    if (IsError(dbiStream.HasValidSectionContributionStream(rawPdbFile))) return false;
     return true;
 }
 } // namespace
@@ -108,11 +104,9 @@ std::unique_ptr<deque<PdbSymbol>> loadFunctions(const PDB::RawFile& rawPdbFile, 
         const PDB::CodeView::DBI::Record* record = publicSymbolStream.GetRecord(symbolRecordStream, hashRecord);
         const uint32_t                    rva =
             imageSectionStream.ConvertSectionOffsetToRVA(record->data.S_PUB32.section, record->data.S_PUB32.offset);
-        if (rva == 0u)
-            continue;
+        if (rva == 0u) continue;
         const std::string symbol(record->data.S_PUB32.name);
-        if (symbol.empty())
-            continue;
+        if (symbol.empty()) continue;
         const bool isFunction = (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function);
         func->push_back(PdbSymbol(symbol, rva, isFunction));
     }
