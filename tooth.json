@@ -1,0 +1,20 @@
+{
+    "format_version": 2,
+    "tooth": "github.com/LiteLDev/PeEditor",
+    "version": "3.5.0",
+    "info": {
+        "name": "PeEditor",
+        "description": "A tool to inject PreLoader to Minecraft Bedrock Dedicated Server",
+        "author": "LiteLDev",
+        "tags": []
+    },
+    "asset_url": "https://github.com/LiteLDev/PeEditor/releases/download/v3.5.0/peeditor-v3.5.0-windows-amd64.zip",
+    "files": {
+        "place": [
+            {
+                "src": "PeEditor.exe",
+                "dest": "PeEditor.exe"
+            }
+        ]
+    }
+}
