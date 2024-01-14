@@ -87,7 +87,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: peeditor-${{ env.VERSION }}-windows-amd64
-          path: artifacts/peeditor-${{ env.VERSION }}-windows-amd64
+          path: artifacts
 
   upload-to-release:
     name: Upload to Release
