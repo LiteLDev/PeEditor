@@ -108,7 +108,8 @@ jobs:
           mv peeditor-${{ env.VERSION }}-windows-amd64 artifacts
           mv artifacts/peeditor-${{ env.VERSION }}-windows-amd64 .
           cd peeditor-${{ env.VERSION }}-windows-amd64
-          zip -r peeditor-${{ env.VERSION }}-windows-amd64.zip *
+          zip -r ../peeditor-${{ env.VERSION }}-windows-amd64.zip *
+          cd ..
           echo "ZIP_SHA256=$(sha256sum peeditor-${{ env.VERSION }}-windows-amd64.zip | cut -d ' ' -f 1)" >> $GITHUB_ENV
           echo "EXE_SHA256=$(sha256sum peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.exe | cut -d ' ' -f 1)" >> $GITHUB_ENV
           echo "PDB_SHA256=$(sha256sum peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.pdb | cut -d ' ' -f 1)" >> $GITHUB_ENV
