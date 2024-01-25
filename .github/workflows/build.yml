@@ -37,15 +37,13 @@ jobs:
         with:
           xmake-version: latest
 
-      - name: Cache XMake
-        uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/AppData/Local/.xmake
-            ./.xmake
-          key: ${{ runner.os }}-xmake-${{ github.sha }}
+          key: xmake-${{ hashFiles('xmake.lua') }}
           restore-keys: |
-            ${{ runner.os }}-xmake-
+            xmake-
 
       - name: Update XMake Repository
         run: xmake repo -u
