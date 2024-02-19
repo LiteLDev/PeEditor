@@ -1,24 +1,18 @@
 # PeEditor
 
-_part of LeviLamina Toolchain_
+A tool to inject PreLoader to Minecraft Bedrock Dedicated Server
 
-## Features
+This utility provides features including generating modified BDS executable file for LeviLamina, generating import library files for LeviLamina and Plugins, generating .def files and a symbol list for looking up symbol names with corresponding RVA.
 
-1. Generate modified BDS executable file for LeviLamina
-2. Generate import library files for LeviLamina and Plugins
-3. Generate .def files and a symbol list for looking up symbol names with corresponding RVA
+## Install
 
-## Usages
-
-### 1. Double Click
-
-This will automatically load the bedrock_server.exe and bedrock_server.pdb files from the current working directory, and proceed to create a modified version of the server called bedrock_server_mod.exe.
-
-
-### 2. Use a Command Line
-
+```sh
+lip install github.com/LiteLDev/PeEditor
 ```
-LeviLamina ToolChain PeEditor v3.4.1
+
+## Usage
+
+```text
 Usage:
   PeEditor [OPTION...]
 
@@ -38,7 +32,12 @@ Usage:
   -h, --help             Print usage
 ```
 
-## What's New
-1. Merged LibraryBuilder into PeEditor
-2. Added more options
-3. Improve process speed
+## Contributing
+
+Ask questions by creating an issue.
+
+PRs accepted.
+
+## License
+
+GPL-3.0-or-later © LiteLDev
