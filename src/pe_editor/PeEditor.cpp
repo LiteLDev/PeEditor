@@ -183,7 +183,7 @@ int generateLibFile() {
         logger->error("Cannot create bedrock_server_api.lib.");
         return -1;
     }
-    logger->info("Generated bedrock_server_api.lib successfully.");
+    logger->info("Generated bedrock_server_api.lib successfully. Exported {} symbols.", ApiExports.size());
     err = llvm::object::writeImportLibrary(
         "bedrock_server_mod.exe",
         (config::outputDir / config::libVarFile).string(),
@@ -195,7 +195,7 @@ int generateLibFile() {
         logger->error("Cannot create bedrock_server_var.lib.");
         return -1;
     }
-    logger->info("Generated bedrock_server_var.lib successfully.");
+    logger->info("Generated bedrock_server_var.lib successfully. Exported {} symbols.", VarExports.size());
     return 0;
 }
 
