@@ -6,15 +6,15 @@
         ["cmake#31fecfc4"] = {
             repo = {
                 branch = "master",
-                commit = "fa285a31269c7a407167ff2942d1e1da5b4bbd81",
+                commit = "ce583d1736cf4ea43cc0c137e0d45671a446dc4a",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
-            version = "3.27.2-msvc1"
+            version = "3.23.1"
         },
         ["ctre#31fecfc4"] = {
             repo = {
                 branch = "master",
-                commit = "fde5c56447574e8a439233b846c6bf70177f99d4",
+                commit = "fa285a31269c7a407167ff2942d1e1da5b4bbd81",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "3.4.1"
@@ -22,7 +22,7 @@
         ["cxxopts#31fecfc4"] = {
             repo = {
                 branch = "master",
-                commit = "fde5c56447574e8a439233b846c6bf70177f99d4",
+                commit = "ce583d1736cf4ea43cc0c137e0d45671a446dc4a",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "v3.0.0"
@@ -42,15 +42,16 @@
             },
             version = "9.1.0"
         },
-        ["llvm-prebuilt#31fecfc4"] = {
+        ["llvm-prebuilt 18.1.1#31fecfc4"] = {
             repo = {
-                url = "repository"
+                commit = "aebe837394493aceb38adc0858e59bbdf21d9ff0",
+                url = "https://github.com/LiteLDev/xmake-repo.git"
             },
-            version = "14.0.6"
+            version = "18.1.1"
         },
         ["pe_bliss#31fecfc4"] = {
             repo = {
-                commit = "056b609c01e7e36436c4029f600cf8131b9c6954",
+                commit = "aebe837394493aceb38adc0858e59bbdf21d9ff0",
                 url = "https://github.com/LiteLDev/xmake-repo.git"
             },
             version = "v1.0.0"
@@ -58,7 +59,7 @@
         ["raw_pdb#31fecfc4"] = {
             repo = {
                 branch = "master",
-                commit = "fa285a31269c7a407167ff2942d1e1da5b4bbd81",
+                commit = "ce583d1736cf4ea43cc0c137e0d45671a446dc4a",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "2022.10.17"
@@ -66,7 +67,7 @@
         ["spdlog#31fecfc4"] = {
             repo = {
                 branch = "master",
-                commit = "fde5c56447574e8a439233b846c6bf70177f99d4",
+                commit = "ce583d1736cf4ea43cc0c137e0d45671a446dc4a",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "v1.11.0"
