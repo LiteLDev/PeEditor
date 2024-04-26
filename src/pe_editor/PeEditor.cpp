@@ -155,12 +155,7 @@ int generateLibFile() {
     std::vector<llvm::object::COFFShortExport> VarExports;
     std::ranges::for_each(filteredSymbols, [&](const PdbSymbol& symbol) {
         llvm::object::COFFShortExport record;
-
-        if (auto fakeSymbol = pe_editor::FakeSymbol::getFakeSymbol(symbol.name); fakeSymbol) {
-            record.Name = *fakeSymbol;
-        } else {
-            record.Name = symbol.name;
-        }
+        record.Name = pe_editor::FakeSymbol::getFakeSymbol(symbol.name).value_or(symbol.name);
         if (!symbol.isFunction) {
             VarExports.push_back(record);
         } else {
@@ -274,14 +269,18 @@ int generateModdedBds() {
                | std::views::transform([](const exported_function& fn) { return fn.get_name(); });
     std::ranges::copy(names, std::inserter(exportedFunctionsNames, exportedFunctionsNames.end()));
 
-    auto filtered = data::filteredSymbols | std::views::filter([&](const PdbSymbol& symbol) {
-                        return !symbol.isFunction && !exportedFunctionsNames.contains(symbol.name);
-                    });
+    auto filtered =
+        data::filteredSymbols | std::views::filter([&](const PdbSymbol& symbol) { return !symbol.isFunction; });
 
     for (const auto& symbol : filtered) {
-        exportedFunctionsNames.insert(symbol.name);
+        auto fakeSymbol = pe_editor::FakeSymbol::getFakeSymbol(symbol.name).value_or(symbol.name);
+        if (exportedFunctionsNames.contains(fakeSymbol)) {
+            continue;
+        }
+        exportedFunctionsNames.insert(fakeSymbol);
         exported_function func;
-        func.set_name(symbol.name);
+
+        func.set_name(fakeSymbol);
         func.set_rva(symbol.rva);
         func.set_ordinal(exportOrdinal++);
         if (exportOrdinal > 65535) {
@@ -322,7 +321,7 @@ int generateModdedBds() {
 
         moddedBds.close();
         originBds.file.close();
-        logger->info("Generated modified BDS executable file successfully.");
+        logger->info("Generated modified BDS executable file successfully. Exported {} symbols.", exportOrdinal);
 
         if (!config::backupBds) {
             return 0;
