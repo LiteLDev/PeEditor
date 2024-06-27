@@ -9,9 +9,6 @@
 
 #include <windows.h>
 
-using std::deque;
-using std::string;
-
 namespace MemoryMappedFile {
 struct Handle {
     HANDLE file;
@@ -92,11 +89,12 @@ inline bool HasValidDBIStreams(const PDB::RawFile& rawPdbFile, const PDB::DBIStr
 }
 } // namespace
 
-std::unique_ptr<deque<PdbSymbol>> loadFunctions(const PDB::RawFile& rawPdbFile, const PDB::DBIStream& dbiStream) {
-    auto                          func               = std::make_unique<deque<PdbSymbol>>();
+std::unique_ptr<std::deque<PdbSymbol>> loadFunctions(const PDB::RawFile& rawPdbFile, const PDB::DBIStream& dbiStream) {
+    auto                          func               = std::make_unique<std::deque<PdbSymbol>>();
     const PDB::ImageSectionStream imageSectionStream = dbiStream.CreateImageSectionStream(rawPdbFile);
     const PDB::CoalescedMSFStream symbolRecordStream = dbiStream.CreateSymbolRecordStream(rawPdbFile);
     const PDB::PublicSymbolStream publicSymbolStream = dbiStream.CreatePublicSymbolStream(rawPdbFile);
+    const PDB::ModuleInfoStream   moduleInfoStream   = dbiStream.CreateModuleInfoStream(rawPdbFile);
 
     const PDB::ArrayView<PDB::HashRecord> hashRecords = publicSymbolStream.GetRecords();
 
@@ -108,12 +106,45 @@ std::unique_ptr<deque<PdbSymbol>> loadFunctions(const PDB::RawFile& rawPdbFile, 
         const std::string symbol(record->data.S_PUB32.name);
         if (symbol.empty()) continue;
         const bool isFunction = (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function);
-        func->push_back(PdbSymbol(symbol, rva, isFunction));
+        func->push_back(PdbSymbol(symbol, rva, isFunction, false, false));
+    }
+    // module symbols are those symbols that are not visible to the linker
+    // usually anonymous implementation/cleanup dtor/etc..., without mangling
+    for (const PDB::ModuleInfoStream::Module& module : moduleInfoStream.GetModules()) {
+        if (!module.HasSymbolStream()) {
+            continue;
+        }
+        const PDB::ModuleSymbolStream moduleSymbolStream = module.CreateSymbolStream(rawPdbFile);
+        moduleSymbolStream.ForEachSymbol([&imageSectionStream, &func](const PDB::CodeView::DBI::Record* record) {
+            if (record->header.kind == PDB::CodeView::DBI::SymbolRecordKind::S_LPROC32) {
+                uint32_t rva = imageSectionStream.ConvertSectionOffsetToRVA(
+                    record->data.S_LPROC32.section,
+                    record->data.S_LPROC32.offset
+                );
+                if (rva == 0u) return;
+
+                std::string_view name = record->data.S_LPROC32.name;
+                bool             skip = true;
+                // symbol with '`' prefix is special symbol
+                if (name.starts_with("`")) {
+                    if (name.starts_with("`anonymous namespace'")) {
+                        skip = false;
+                    }
+                } else {
+                    if (name.starts_with("std::_Func_impl_no_alloc") || name.find("`dynamic") != std::string_view::npos)
+                        skip = true;
+                    else skip = false;
+                }
+                const bool isFunction =
+                    (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function);
+                func->push_back(PdbSymbol(record->data.S_LPROC32.name, rva, isFunction, true, skip));
+            }
+        });
     }
     return func;
 }
 
-std::unique_ptr<deque<PdbSymbol>> loadPDB(const wchar_t* pdbPath) {
+std::unique_ptr<std::deque<PdbSymbol>> loadPDB(const wchar_t* pdbPath) {
     MemoryMappedFile::Handle pdbFile = MemoryMappedFile::Open(pdbPath);
     if (!pdbFile.baseAddress) {
         return nullptr;

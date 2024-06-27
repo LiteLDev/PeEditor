@@ -21,20 +21,22 @@ inline bool genModdedBds  = false;
 inline bool genDefFile    = false;
 inline bool genLibFile    = false;
 inline bool genSymbolList = false;
+inline bool genSymbolData = false;
 inline bool backupBds     = false;
 inline bool shouldPause   = false;
 inline bool choosePdbFile = false;
-inline bool oldMode       = false;
 
 inline std::filesystem::path outputDir;
 inline std::filesystem::path bdsExePath;
 inline std::filesystem::path bdsPdbPath;
+inline std::filesystem::path inputdataPath;
 
 constexpr auto defApiFile     = "bedrock_server_api.def";
 constexpr auto defVarFile     = "bedrock_server_var.def";
 constexpr auto libApiFile     = "bedrock_server_api.lib";
 constexpr auto libVarFile     = "bedrock_server_var.lib";
 constexpr auto symbolListFile = "bedrock_server_symbol_list.txt";
+constexpr auto symbolDataFile = "bedrock_symbol_data";
 
 } // namespace config
 
@@ -58,6 +60,8 @@ inline struct {
 
 inline std::ofstream symbolListFile;
 
+inline std::ofstream symbolDataFile;
+
 } // namespace data
 
 void parseArgs(int argc, char** argv);
@@ -69,6 +73,8 @@ int generateDefFile();
 int generateLibFile();
 
 int generateSymbolListFile();
+
+int generateSymbolDataFile();
 
 int generateModdedBds();
 

@@ -9,7 +9,7 @@
                 commit = "ce583d1736cf4ea43cc0c137e0d45671a446dc4a",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
-            version = "3.29.2"
+            version = "3.30.0-rc3"
         },
         ["ctre#31fecfc4"] = {
             repo = {
@@ -63,6 +63,14 @@
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "2022.10.17"
+        },
+        ["snappy#31fecfc4"] = {
+            repo = {
+                branch = "master",
+                commit = "ce583d1736cf4ea43cc0c137e0d45671a446dc4a",
+                url = "https://gitee.com/tboox/xmake-repo.git"
+            },
+            version = "1.1.10"
         },
         ["spdlog#31fecfc4"] = {
             repo = {

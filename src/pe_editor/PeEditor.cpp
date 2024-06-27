@@ -8,6 +8,7 @@
 
 #include "cxxopts.hpp"
 #include "demangler/Demangle.h"
+#include "snappy.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
@@ -34,7 +35,6 @@ inline std::string getPathUtf8(const std::filesystem::path& path) { return Strin
 
 void parseArgs(int argc, char** argv) {
     using cxxopts::value;
-    using std::string;
 
     cxxopts::Options options("PeEditor", "LeviLamina ToolChain PeEditor " PE_EDITOR_VERSION);
     options.allow_unrecognised_options();
@@ -56,9 +56,11 @@ void parseArgs(int argc, char** argv) {
         .add("d,def", "Generate def files for develop propose", value<bool>()->default_value("false"))
         .add("l,lib", "Generate lib files for develop propose", value<bool>()->default_value("false"))
         .add("s,sym", "Generate symbol list containing symbol and rva", value<bool>()->default_value("false"))
-        .add("o,output-dir", "Output dir", value<string>()->default_value("./"))
-        .add("exe", "BDS executable file name", value<string>()->default_value("./bedrock_server.exe"))
-        .add("pdb", "BDS debug database file name", value<string>()->default_value("./bedrock_server.pdb"))
+        .add("t,data", "Generate symbol data containing symbol and rva", value<bool>()->default_value("false"))
+        .add("o,output-dir", "Output dir", value<std::string>()->default_value("./"))
+        .add("exe", "BDS executable file name", value<std::string>()->default_value("./bedrock_server.exe"))
+        .add("pdb", "BDS debug database file name", value<std::string>()->default_value("./bedrock_server.pdb"))
+        .add("idata", "Symbol database file name", value<std::string>()->default_value("./bedrock_symbol_data"))
         .add("c,choose-pdb-file", "Choose PDB file with a window", value<bool>()->default_value("false"))
         .add("v,verbose", "Verbose output", value<bool>()->default_value("false"))
         .add("V,version", "Print version", value<bool>()->default_value("false"))
@@ -93,16 +95,20 @@ void parseArgs(int argc, char** argv) {
     config::genDefFile    = optionsResult["def"].as<bool>();
     config::genLibFile    = optionsResult["lib"].as<bool>();
     config::genSymbolList = optionsResult["sym"].as<bool>();
+    config::genSymbolData = optionsResult["data"].as<bool>();
     config::backupBds     = optionsResult["bak"].as<bool>();
     config::shouldPause   = optionsResult["pause"].as<bool>();
     config::choosePdbFile = optionsResult["choose-pdb-file"].as<bool>();
-    config::oldMode       = optionsResult["old"].as<bool>();
-    config::outputDir     = optionsResult["output-dir"].as<std::string>();
-    config::bdsExePath    = optionsResult["exe"].as<std::string>();
-    config::bdsPdbPath    = optionsResult["pdb"].as<std::string>();
+    config::outputDir     = StringUtils::str2u8strConst(optionsResult["output-dir"].as<std::string>());
+    config::bdsExePath    = StringUtils::str2u8strConst(optionsResult["exe"].as<std::string>());
+    config::bdsPdbPath    = StringUtils::str2u8strConst(optionsResult["pdb"].as<std::string>());
+    config::inputdataPath = StringUtils::str2u8strConst(optionsResult["idata"].as<std::string>());
 }
 
 bool filterSymbols(const PdbSymbol& symbol) {
+    if (symbol.fromModule || symbol.verbose) {
+        return false;
+    }
     if (symbol.name[0] != '?') {
         return false;
     }
@@ -206,6 +212,9 @@ int generateSymbolListFile() {
         return -1;
     }
     std::ranges::for_each(*symbols, [&](const PdbSymbol& fn) {
+        if (fn.verbose) {
+            return;
+        }
         auto demangledName = demangler::microsoftDemangle(
             fn.name.c_str(),
             nullptr,
@@ -227,14 +236,77 @@ int generateSymbolListFile() {
     return 0;
 }
 
+void writeVarint(uint32_t v, std::string& data) {
+    if ((v & (0xFFFFFFFF << 7)) == 0) {
+        data += uint8_t(v);
+    } else {
+        data += uint8_t(v & 0x7F | 0x80);
+        if ((v & (0xFFFFFFFF << 14)) == 0) {
+            data += uint8_t(v >> 7);
+        } else {
+            data += uint8_t((v >> 7) & 0x7F | 0x80);
+            if ((v & (0xFFFFFFFF << 21)) == 0) {
+                data += uint8_t(v >> 14);
+            } else {
+                data += uint8_t((v >> 14) & 0x7F | 0x80);
+                if ((v & (0xFFFFFFFF << 28)) == 0) {
+                    data += uint8_t(v >> 21);
+                } else {
+                    data += uint8_t((v >> 21) & 0x7F | 0x80);
+                    data += uint8_t(v >> 28);
+                }
+            }
+        }
+    }
+}
+
+int generateSymbolDataFile() {
+    using namespace data;
+    if (!config::genSymbolData) {
+        return 0;
+    }
+    logger->info("Generating symbol data file...");
+    symbolDataFile.open(config::outputDir / config::symbolDataFile, std::ios::ate | std::ios::out | std::ios::binary);
+    if (!symbolDataFile) {
+        logger->error("Cannot create symbol data file.");
+        return -1;
+    }
+    std::multimap<uint32_t, PdbSymbol const*> sortedSymbols;
+    std::ranges::for_each(*symbols, [&](const PdbSymbol& fn) {
+        if (fn.name.empty()) {
+            return;
+        }
+        sortedSymbols.insert({fn.rva, &fn});
+    });
+    std::string uncompressed, compressed;
+
+    uint32_t lastRva{0};
+    std::ranges::for_each(sortedSymbols | std::views::values, [&](const PdbSymbol* fn) {
+        uint8_t starts{};
+        starts        |= (uint8_t(fn->isFunction) * (1 << 0));
+        starts        |= (uint8_t(fn->fromModule) * (1 << 1));
+        starts        |= (uint8_t(fn->verbose) * (1 << 2));
+        uncompressed  += starts;
+        uint32_t rrva  = fn->rva - lastRva;
+        lastRva        = fn->rva;
+        writeVarint(rrva, uncompressed);
+        uncompressed += fn->name;
+        uncompressed += '\n';
+    });
+    snappy::Compress(uncompressed.data(), uncompressed.size(), &compressed);
+    symbolDataFile << compressed;
+    symbolDataFile.flush();
+    symbolDataFile.close();
+    logger->info("Generated symbol data file successfully.");
+    return 0;
+}
+
 struct ImportDllName {
-    static constexpr auto liteloader2 = "LLPreLoader.dll";
-    static constexpr auto levilamina  = "PreLoader.dll";
+    static constexpr auto levilamina = "PreLoader.dll";
 };
 
 struct ImportFunctionName {
-    static constexpr auto liteloader2 = "dlsym_real";
-    static constexpr auto levilamina  = "pl_resolve_symbol";
+    static constexpr auto levilamina = "pl_resolve_symbol";
 };
 
 int generateModdedBds() {
@@ -309,9 +381,9 @@ int generateModdedBds() {
         imported_functions_list imports = get_imported_functions(*originBds.pe);
         import_library          preLoader;
         imported_function       func;
-        func.set_name(!config::oldMode ? ImportFunctionName::levilamina : ImportFunctionName::liteloader2);
+        func.set_name(ImportFunctionName::levilamina);
         func.set_iat_va(0x1);
-        preLoader.set_name(!config::oldMode ? ImportDllName::levilamina : ImportDllName::liteloader2);
+        preLoader.set_name(ImportDllName::levilamina);
         preLoader.add_import(func);
         imports.push_back(preLoader);
         section& attachedImportedSection = originBds.pe->add_section(ImportSection);
@@ -346,6 +418,41 @@ int generateModdedBds() {
     return 0;
 }
 
+std::unique_ptr<std::deque<PdbSymbol>> loadData(std::filesystem::path const& path) {
+    std::ifstream fRead;
+    fRead.open(path, std::ios_base::in | std::ios_base::binary);
+    if (!fRead.is_open()) {
+        return nullptr;
+    }
+    auto        func = std::make_unique<std::deque<PdbSymbol>>();
+    std::string compressed((std::istreambuf_iterator<char>(fRead)), {});
+    std::string data;
+    snappy::Uncompress(compressed.data(), compressed.size(), &data);
+    uint32_t rva{0};
+    for (size_t i = 0; i < data.size(); i++) {
+        uint8_t    c          = data[i++];
+        bool const isFunction = c & (1 << 0);
+        bool const fromModule = c & (1 << 1);
+        bool const verbose    = c & (1 << 2);
+        uint32_t   rrva{0};
+        int        shift_amount = 0;
+        do {
+            rrva         |= (uint32_t)(data[i] & 0x7F) << shift_amount;
+            shift_amount += 7;
+        } while ((data[i++] & 0x80) != 0);
+        rva        += rrva;
+        auto begin  = i;
+        i           = data.find_first_of('\n', begin);
+        if (i == std::string::npos) {
+            break;
+        }
+        std::string name(data, begin, i - begin);
+        func->push_back(PdbSymbol(std::move(name), rva, isFunction, fromModule, verbose));
+    }
+    fRead.close();
+    return func;
+}
+
 } // namespace pe_editor
 
 int main(int argc, char** argv) {
@@ -370,7 +477,8 @@ int main(int argc, char** argv) {
     logger->info("Build Date CST " __TIMESTAMP__);
 
     // exit if no work to do
-    if (!config::genModdedBds && !config::genLibFile && !config::genDefFile && !config::genSymbolList) {
+    if (!config::genModdedBds && !config::genLibFile && !config::genDefFile && !config::genSymbolList
+        && !config::genSymbolData) {
         logger->info("No work to do, exiting...");
         return 0;
     }
@@ -386,7 +494,6 @@ int main(int argc, char** argv) {
     }
 
     logger->info("Configurations:");
-    logger->info("\tOld Mode: \t\t\t[{}]", config::oldMode);
     logger->info("\tBDS Executable File: \t\t[{}]", getPathUtf8(config::bdsExePath.wstring()));
     logger->info("\tBDS PDB File: \t\t\t[{}]", getPathUtf8(config::bdsPdbPath.wstring()));
     logger->info("\tOutput Dir: \t\t\t[{}]", getPathUtf8(config::outputDir.wstring()));
@@ -398,13 +505,22 @@ int main(int argc, char** argv) {
 
     logger->info("Loading PDB file...");
     data::symbols = loadPDB(config::bdsPdbPath.wstring().c_str());
-    if (!data::symbols) {
+    if (!data::symbols && !std::filesystem::exists(config::inputdataPath)) {
         logger->error("Failed to load PDB file.");
         exitWith(-1);
+    } else if (!data::symbols) {
+        logger->info("Loading Data file...");
+        if (data::symbols = pe_editor::loadData(config::inputdataPath); !data::symbols) {
+            logger->error("Failed to load Data file.");
+            exitWith(-1);
+        }
     }
     logger->info("Loaded {} symbols.", data::symbols->size());
 
     if (auto ret = generateSymbolListFile()) {
+        exitWith(ret);
+    }
+    if (auto ret = generateSymbolDataFile()) {
         exitWith(ret);
     }
 
