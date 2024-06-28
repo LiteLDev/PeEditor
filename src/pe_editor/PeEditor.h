@@ -20,6 +20,7 @@ namespace config {
 inline bool genModdedBds  = false;
 inline bool genDefFile    = false;
 inline bool genLibFile    = false;
+inline bool genPdbFile    = false;
 inline bool genSymbolList = false;
 inline bool genSymbolData = false;
 inline bool backupBds     = false;
@@ -37,6 +38,7 @@ constexpr auto libApiFile     = "bedrock_server_api.lib";
 constexpr auto libVarFile     = "bedrock_server_var.lib";
 constexpr auto symbolListFile = "bedrock_server_symbol_list.txt";
 constexpr auto symbolDataFile = "bedrock_symbol_data";
+constexpr auto derivedPdbFile = "bedrock_derived.pdb";
 
 } // namespace config
 

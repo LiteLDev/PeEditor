@@ -9,13 +9,13 @@ struct PdbSymbol {
     std::string name;
     uint32_t    rva;
     bool        isFunction;
-    bool        fromModule;
+    bool        isPublic;
     bool        verbose;
-    PdbSymbol(std::string name, uint32_t rva, bool isFunction, bool fromModule, bool verbose)
+    PdbSymbol(std::string name, uint32_t rva, bool isFunction, bool isPublic, bool verbose)
     : name(std::move(name)),
       rva(rva),
       isFunction(isFunction),
-      fromModule(fromModule),
+      isPublic(isPublic),
       verbose(verbose) {}
 };
 

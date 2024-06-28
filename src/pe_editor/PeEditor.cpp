@@ -55,6 +55,7 @@ void parseArgs(int argc, char** argv) {
         )
         .add("d,def", "Generate def files for develop propose", value<bool>()->default_value("false"))
         .add("l,lib", "Generate lib files for develop propose", value<bool>()->default_value("false"))
+        .add("r,rebuild-pdb", "Generate pdb file for debug propose", value<bool>()->default_value("false"))
         .add("s,sym", "Generate symbol list containing symbol and rva", value<bool>()->default_value("false"))
         .add("t,data", "Generate symbol data containing symbol and rva", value<bool>()->default_value("false"))
         .add("o,output-dir", "Output dir", value<std::string>()->default_value("./"))
@@ -62,7 +63,7 @@ void parseArgs(int argc, char** argv) {
         .add("pdb", "BDS debug database file name", value<std::string>()->default_value("./bedrock_server.pdb"))
         .add("idata", "Symbol database file name", value<std::string>()->default_value("./bedrock_symbol_data"))
         .add("c,choose-pdb-file", "Choose PDB file with a window", value<bool>()->default_value("false"))
-        .add("v,verbose", "Verbose output", value<bool>()->default_value("false"))
+        .add("verbose", "Verbose output", value<bool>()->default_value("false"))
         .add("V,version", "Print version", value<bool>()->default_value("false"))
         .add("h,help", "Print usage");
 
@@ -94,6 +95,7 @@ void parseArgs(int argc, char** argv) {
     config::genModdedBds  = optionsResult["mod"].as<bool>();
     config::genDefFile    = optionsResult["def"].as<bool>();
     config::genLibFile    = optionsResult["lib"].as<bool>();
+    config::genPdbFile    = optionsResult["rebuild-pdb"].as<bool>();
     config::genSymbolList = optionsResult["sym"].as<bool>();
     config::genSymbolData = optionsResult["data"].as<bool>();
     config::backupBds     = optionsResult["bak"].as<bool>();
@@ -106,7 +108,7 @@ void parseArgs(int argc, char** argv) {
 }
 
 bool filterSymbols(const PdbSymbol& symbol) {
-    if (symbol.fromModule || symbol.verbose) {
+    if (!symbol.isPublic || symbol.verbose) {
         return false;
     }
     if (symbol.name[0] != '?') {
@@ -284,7 +286,7 @@ int generateSymbolDataFile() {
     std::ranges::for_each(sortedSymbols | std::views::values, [&](const PdbSymbol* fn) {
         uint8_t starts{};
         starts        |= (uint8_t(fn->isFunction) * (1 << 0));
-        starts        |= (uint8_t(fn->fromModule) * (1 << 1));
+        starts        |= (uint8_t(fn->isPublic) * (1 << 1));
         starts        |= (uint8_t(fn->verbose) * (1 << 2));
         uncompressed  += starts;
         uint32_t rrva  = fn->rva - lastRva;
@@ -432,7 +434,7 @@ std::unique_ptr<std::deque<PdbSymbol>> loadData(std::filesystem::path const& pat
     for (size_t i = 0; i < data.size(); i++) {
         uint8_t    c          = data[i++];
         bool const isFunction = c & (1 << 0);
-        bool const fromModule = c & (1 << 1);
+        bool const isPublic   = c & (1 << 1);
         bool const verbose    = c & (1 << 2);
         uint32_t   rrva{0};
         int        shift_amount = 0;
@@ -447,7 +449,7 @@ std::unique_ptr<std::deque<PdbSymbol>> loadData(std::filesystem::path const& pat
             break;
         }
         std::string name(data, begin, i - begin);
-        func->push_back(PdbSymbol(std::move(name), rva, isFunction, fromModule, verbose));
+        func->push_back(PdbSymbol(std::move(name), rva, isFunction, isPublic, verbose));
     }
     fRead.close();
     return func;
@@ -478,7 +480,7 @@ int main(int argc, char** argv) {
 
     // exit if no work to do
     if (!config::genModdedBds && !config::genLibFile && !config::genDefFile && !config::genSymbolList
-        && !config::genSymbolData) {
+        && !config::genSymbolData && !config::genPdbFile) {
         logger->info("No work to do, exiting...");
         return 0;
     }

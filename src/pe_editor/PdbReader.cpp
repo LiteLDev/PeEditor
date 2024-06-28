@@ -106,7 +106,7 @@ std::unique_ptr<std::deque<PdbSymbol>> loadFunctions(const PDB::RawFile& rawPdbF
         const std::string symbol(record->data.S_PUB32.name);
         if (symbol.empty()) continue;
         const bool isFunction = (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function);
-        func->push_back(PdbSymbol(symbol, rva, isFunction, false, false));
+        func->push_back(PdbSymbol(symbol, rva, isFunction, true, false));
     }
     // module symbols are those symbols that are not visible to the linker
     // usually anonymous implementation/cleanup dtor/etc..., without mangling
@@ -137,7 +137,7 @@ std::unique_ptr<std::deque<PdbSymbol>> loadFunctions(const PDB::RawFile& rawPdbF
                 }
                 const bool isFunction =
                     (bool)(record->data.S_PUB32.flags & PDB::CodeView::DBI::PublicSymbolFlags::Function);
-                func->push_back(PdbSymbol(record->data.S_LPROC32.name, rva, isFunction, true, skip));
+                func->push_back(PdbSymbol(record->data.S_LPROC32.name, rva, isFunction, false, skip));
             }
         });
     }
