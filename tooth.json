@@ -4,7 +4,7 @@
     "version": "3.8.0",
     "info": {
         "name": "PeEditor",
-        "description": "A tool to inject PreLoader to Minecraft Bedrock Dedicated Server",
+        "description": "A tool to inject PreLoader to Minecraft Bedrock Edition",
         "author": "LiteLDev",
         "tags": []
     },
