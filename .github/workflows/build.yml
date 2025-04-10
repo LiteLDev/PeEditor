@@ -5,22 +5,16 @@ env:
   EXE_SHA256: ""
   PDB_SHA256: ""
 on:
-  push:
-    paths:
-      - "**.cpp"
-      - "**.cc"
-      - "**.cxx"
-      - "**.c"
-      - "**.hpp"
-      - "**.hh"
-      - "**.hxx"
-      - "**.h"
-      - ".github/workflows/build.yml"
-      - "**/xmake.lua"
-  pull_request:
   release:
     types:
       - created
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "xmake.lua"
+      - ".github/workflows/build.yml"
   workflow_dispatch:
 
 jobs:
@@ -82,7 +76,7 @@ jobs:
           mv peeditor-${{ env.VERSION }}-windows-amd64 artifacts/
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: peeditor-${{ env.VERSION }}-windows-amd64
           path: artifacts
@@ -98,7 +92,7 @@ jobs:
         run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Compress Artifacts
         id: compress

@@ -1,6 +1,12 @@
 #include "pe_editor/StringUtils.h"
 
-#include <Windows.h>
+#include <string>
+#include <string_view>
+
+#include <windows.h>
+
+#include <stringapiset.h>
+#include <winnls.h>
 
 namespace pe_editor::StringUtils {
 std::wstring str2wstr(std::string_view str, uint codePage) {

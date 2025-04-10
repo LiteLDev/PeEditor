@@ -1,20 +1,16 @@
 add_rules("mode.debug", "mode.release")
 
-set_policy("package.requires_lock", true)
 add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 
-add_requires("llvm-prebuilt 18.1.1")
-add_requires("raw_pdb")
 add_requires("cxxopts")
 add_requires("fmt")
-add_requires("spdlog")
-add_requires("ctre")
-add_requires("snappy")
+add_requires("spdlog", {configs = {header_only = false}})
 
-add_requires("demangler")
 add_requires("pe_bliss")
 
 set_runtimes("MD")
+
+local version = "v3.9.0"
 
 target("PeEditor")
     set_kind("binary")
@@ -24,6 +20,8 @@ target("PeEditor")
     add_includedirs("src")
     add_cxflags("/utf-8", "/EHa")
     set_exceptions("none")
-    add_defines("UNICODE", "PE_EDITOR_VERSION=\"v3.4.1\"")
+    add_defines("UNICODE", "PE_EDITOR_VERSION=\"" .. version .. "\"", "_CRT_NONSTDC_NO_DEPRECATE")
     add_syslinks("wsock32", "comdlg32")
-    add_packages("llvm-prebuilt", "raw_pdb", "pe_bliss", "cxxopts", "fmt", "spdlog", "ctre", "demangler", "snappy")
+    add_packages(
+        "cxxopts", "fmt", "spdlog", "pe_bliss"
+    )

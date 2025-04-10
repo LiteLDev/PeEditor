@@ -1,20 +1,32 @@
 {
-    "format_version": 2,
-    "tooth": "github.com/LiteLDev/PeEditor",
-    "version": "3.8.1",
-    "info": {
-        "name": "PeEditor",
-        "description": "A tool to inject PreLoader to Minecraft Bedrock Edition",
-        "author": "LiteLDev",
-        "tags": []
-    },
-    "asset_url": "https://github.com/LiteLDev/PeEditor/releases/download/v3.8.1/peeditor-windows-x64.zip",
-    "files": {
-        "place": [
+  "format_version": 3,
+  "format_uuid": "289f771f-2c9a-4d73-9f3f-8492495a924d",
+  "tooth": "github.com/LiteLDev/PeEditor",
+  "version": "3.9.0",
+  "info": {
+    "name": "PeEditor",
+    "description": "A tool to inject PreLoader to Minecraft Bedrock Edition",
+    "tags": [],
+    "avatar_url": ""
+  },
+  "variants": [
+    {
+      "platform": "win-x64",
+      "assets": [
+        {
+          "type": "zip",
+          "urls": [
+            "https://github.com/LiteLDev/PeEditor/releases/download/v{{version}}/peeditor-windows-x64.zip"
+          ],
+          "placements": [
             {
-                "src": "PeEditor.exe",
-                "dest": "PeEditor.exe"
+              "type": "file",
+              "src": "PeEditor.exe",
+              "dest": "PeEditor.exe"
             }
-        ]
+          ]
+        }
+      ]
     }
+  ]
 }

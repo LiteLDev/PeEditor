@@ -16,21 +16,25 @@ lip install github.com/LiteLDev/PeEditor
 Usage:
   PeEditor [OPTION...]
 
-  -m, --mod              Generate bedrock_server_mod.exe (will be true if no arg passed)
-  -p, --pause            Pause before exit (will be true if no arg passed)
-  -O, --old              Use old mode for LiteLoaderBDS
-  -b, --bak              Add a suffix ".bak" to original server exe (will be true if no arg passed)
-  -d, --def              Generate def files for develop propose
-  -l, --lib              Generate lib files for develop propose
-  -s, --sym              Generate symbol list containing symbol and rva
-  -o, --output-dir arg   Output dir (default: ./)
-      --exe arg          BDS executable file name (default: ./bedrock_server.exe)
-      --pdb arg          BDS debug database file name (default: ./bedrock_server.pdb)
-  -c, --choose-pdb-file  Choose PDB file with a window
-  -v, --verbose          Verbose output
-  -V, --version          Print version
-  -h, --help             Print usage
+  -m, --mod             Generate mod.exe (will be true if no arg passed)
+  -p, --pause           Pause before exit (will be true if no arg passed)
+  -b, --bak             Add a suffix ".bak" to original server exe (will be true if no arg passed)
+      --inplace         name inplace
+  -o, --output-dir arg  Output dir (default: ./)
+      --exe arg         executable file name (default: ./bedrock_server.exe)
+      --verbose         Verbose output
+  -V, --version         Print version
+  -h, --help            Print usage
 ```
+
+## Used Projects
+
+| Project  | License | Link                                                             |
+|----------|---------|------------------------------------------------------------------|
+| pe_bliss | Special | <https://code.google.com/archive/p/portable-executable-library/> |
+| cxxopts  | MIT     | <https://github.com/jarro2783/cxxopts>                           |
+| fmt      | MIT     | <https://github.com/fmtlib/fmt>                                  |
+| spdlog   | MIT     | <https://github.com/gabime/spdlog>                               |
 
 ## Contributing
 

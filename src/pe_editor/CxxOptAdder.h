@@ -1,6 +1,9 @@
 #pragma once
 
-#include <cxxopts.hpp>
+#include <memory>
+#include <string>
+
+#include "cxxopts.hpp"
 
 class CxxOptsAdder {
     cxxopts::Options&    options;
