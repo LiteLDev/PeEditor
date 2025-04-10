@@ -2,7 +2,7 @@
 
 A tool to inject PreLoader to Minecraft Bedrock Dedicated Server
 
-This utility provides features including generating modified BDS executable file for LeviLamina, generating import library files for LeviLamina and Plugins, generating .def files and a symbol list for looking up symbol names with corresponding RVA.
+This utility provides feature of generating modified BDS executable file for LeviLamina.
 
 ## Install
 
