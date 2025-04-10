@@ -1,6 +1,5 @@
 name: Build
 env:
-  VERSION: v0.0.0
   ZIP_SHA256: ""
   EXE_SHA256: ""
   PDB_SHA256: ""
@@ -42,25 +41,6 @@ jobs:
       - name: Update XMake Repository
         run: xmake repo -u
 
-      - name: Get Release Version Tag
-        if: github.event_name == 'release'
-        run: echo "VERSION=${{ github.ref_name }}" >> $env:GITHUB_ENV
-
-      - name: Get Previous Tag
-        if: github.event_name != 'release'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        with:
-          fallback: "v0.0.0"
-
-      - name: Set Pseudo Version
-        if: github.event_name != 'release'
-        run: |
-          $date = (Get-Date -Format "yyyyMMddHHmmss")
-          $commit = git rev-parse --short HEAD
-          $previous_tag = "${{ steps.previoustag.outputs.tag }}"
-          echo "VERSION=$previous_tag-$date-$commit" >> $env:GITHUB_ENV
-
       - name: Build PeEditor
         run: |
           xmake f -p windows -m release -a x64 --ccache=n -y
@@ -71,14 +51,14 @@ jobs:
           mkdir artifacts
           cp build/windows/x64/release/PeEditor.exe artifacts
           cp build/windows/x64/release/PeEditor.pdb artifacts
-          mv artifacts peeditor-${{ env.VERSION }}-windows-amd64
+          mv artifacts peeditor-windows-x64
           mkdir artifacts
-          mv peeditor-${{ env.VERSION }}-windows-amd64 artifacts/
+          mv peeditor-windows-x64 artifacts/
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: peeditor-${{ env.VERSION }}-windows-amd64
+          name: peeditor-windows-x64
           path: artifacts
 
   upload-to-release:
@@ -88,23 +68,20 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     steps:
-      - name: Get Version
-        run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-
       - name: Download Artifacts
         uses: actions/download-artifact@v4
 
       - name: Compress Artifacts
         id: compress
         run: |
-          mv peeditor-${{ env.VERSION }}-windows-amd64 artifacts
-          mv artifacts/peeditor-${{ env.VERSION }}-windows-amd64 .
-          cd peeditor-${{ env.VERSION }}-windows-amd64
-          zip -r ../peeditor-${{ env.VERSION }}-windows-amd64.zip *
+          mv peeditor-windows-x64 artifacts
+          mv artifacts/peeditor-windows-x64 .
+          cd peeditor-windows-x64
+          zip -r ../peeditor-windows-x64.zip *
           cd ..
-          echo "ZIP_SHA256=$(sha256sum peeditor-${{ env.VERSION }}-windows-amd64.zip | cut -d ' ' -f 1)" >> $GITHUB_ENV
-          echo "EXE_SHA256=$(sha256sum peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.exe | cut -d ' ' -f 1)" >> $GITHUB_ENV
-          echo "PDB_SHA256=$(sha256sum peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.pdb | cut -d ' ' -f 1)" >> $GITHUB_ENV
+          echo "ZIP_SHA256=$(sha256sum peeditor-windows-x64.zip | cut -d ' ' -f 1)" >> $GITHUB_ENV
+          echo "EXE_SHA256=$(sha256sum peeditor-windows-x64/PeEditor.exe | cut -d ' ' -f 1)" >> $GITHUB_ENV
+          echo "PDB_SHA256=$(sha256sum peeditor-windows-x64/PeEditor.pdb | cut -d ' ' -f 1)" >> $GITHUB_ENV
         shell: bash
 
       - name: Upload Release Assets
@@ -112,13 +89,13 @@ jobs:
         with:
           append_body: true
           files: |
-            peeditor-${{ env.VERSION }}-windows-amd64.zip
-            peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.exe
-            peeditor-${{ env.VERSION }}-windows-amd64/PeEditor.pdb
+            peeditor-windows-x64.zip
+            peeditor-windows-x64/PeEditor.exe
+            peeditor-windows-x64/PeEditor.pdb
           body: |
             ---
             | File                                          | SHA256                |
             | :-------------------------------------------- | :-------------------- |
-            | peeditor-${{ env.VERSION }}-windows-amd64.zip | ${{ env.ZIP_SHA256 }} |
+            | peeditor-windows-x64.zip                      | ${{ env.ZIP_SHA256 }} |
             | PeEditor.exe                                  | ${{ env.EXE_SHA256 }} |
             | PeEditor.pdb                                  | ${{ env.PDB_SHA256 }} |
