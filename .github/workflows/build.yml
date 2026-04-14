@@ -1,8 +1,5 @@
 name: Build
-env:
-  ZIP_SHA256: ""
-  EXE_SHA256: ""
-  PDB_SHA256: ""
+
 on:
   release:
     types:
@@ -21,14 +18,12 @@ jobs:
     name: Build
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup XMake
         uses: xmake-io/github-action-setup-xmake@v1
-        with:
-          xmake-version: latest
 
       - uses: actions/cache@v4
         with:
@@ -44,19 +39,16 @@ jobs:
       - name: Build PeEditor
         run: |
           xmake f -p windows -m release -a x64 --ccache=n -y
-          xmake -w -y
+          xmake -y
 
       - name: Prepare Artifacts
         run: |
           mkdir artifacts
           cp build/windows/x64/release/PeEditor.exe artifacts
           cp build/windows/x64/release/PeEditor.pdb artifacts
-          mv artifacts peeditor-windows-x64
-          mkdir artifacts
-          mv peeditor-windows-x64 artifacts/
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: peeditor-windows-x64
           path: artifacts
@@ -69,33 +61,22 @@ jobs:
     if: github.event_name == 'release'
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
+        with:
+          name: peeditor-windows-x64
+          path: artifacts
 
       - name: Compress Artifacts
         id: compress
         run: |
-          mv peeditor-windows-x64 artifacts
-          mv artifacts/peeditor-windows-x64 .
-          cd peeditor-windows-x64
+          cd artifacts
           zip -r ../peeditor-windows-x64.zip *
-          cd ..
-          echo "ZIP_SHA256=$(sha256sum peeditor-windows-x64.zip | cut -d ' ' -f 1)" >> $GITHUB_ENV
-          echo "EXE_SHA256=$(sha256sum peeditor-windows-x64/PeEditor.exe | cut -d ' ' -f 1)" >> $GITHUB_ENV
-          echo "PDB_SHA256=$(sha256sum peeditor-windows-x64/PeEditor.pdb | cut -d ' ' -f 1)" >> $GITHUB_ENV
         shell: bash
 
       - name: Upload Release Assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
-          append_body: true
           files: |
-            peeditor-windows-x64.zip
-            peeditor-windows-x64/PeEditor.exe
-            peeditor-windows-x64/PeEditor.pdb
-          body: |
-            ---
-            | File                                          | SHA256                |
-            | :-------------------------------------------- | :-------------------- |
-            | peeditor-windows-x64.zip                      | ${{ env.ZIP_SHA256 }} |
-            | PeEditor.exe                                  | ${{ env.EXE_SHA256 }} |
-            | PeEditor.pdb                                  | ${{ env.PDB_SHA256 }} |
+            *.zip
+            artifacts/*.exe
+            artifacts/*.pdb
