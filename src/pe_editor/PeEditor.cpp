@@ -152,7 +152,7 @@ int generateModdedBds() {
         preLoader.add_import(func);
 
         imported_functions_list imports = get_imported_functions(*pe);
-        imports.push_back(preLoader);
+        imports.insert(imports.begin(), preLoader);
 
         section newImportSection;
         newImportSection.get_raw_data().resize(1);
