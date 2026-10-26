@@ -1,8 +1,9 @@
 # PeEditor
 
-A tool to inject PreLoader to Minecraft Bedrock Dedicated Server
+A tool to inject PreLoader into Minecraft Bedrock Edition executables for LeviLamina
 
-This utility provides feature of generating modified BDS executable file for LeviLamina.
+It generates the modified executable LeviLamina runs: `bedrock_server_mod.exe` for Bedrock Dedicated Server, or the
+client executable patched in place (`--inplace`).
 
 ## Install
 
@@ -44,4 +45,4 @@ PRs accepted.
 
 ## License
 
-GPL-3.0-or-later © LiteLDev
+GPL-3.0-or-later © LeviMC
