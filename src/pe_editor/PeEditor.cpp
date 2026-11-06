@@ -1,5 +1,6 @@
 #include "pe_editor/PeEditor.h"
 
+#include <cstdint>
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
@@ -165,7 +166,25 @@ int generateModdedBds() {
         settings.build_original_iat(true);
         settings.save_iat_and_original_iat_rvas(true);
 
-        rebuild_imports(*pe, imports, moddedSection, settings);
+        // pe_bliss places the import descriptors right after the import name strings,
+        // so the import directory RVA may be unaligned. Retry with a starting offset
+        // inside the section to make the descriptor array DWORD-aligned.
+        constexpr std::uint32_t importDirectoryAlignment = 4;
+        auto                    importDirectory          = rebuild_imports(*pe, imports, moddedSection, settings);
+        if (auto misalignment = importDirectory.get_rva() % importDirectoryAlignment; misalignment != 0) {
+            auto offset = importDirectoryAlignment - misalignment;
+            settings.set_offset_from_section_start(offset);
+            moddedSection.get_raw_data().assign(offset, '\0'); // clear leftovers, will be expanded again
+            moddedSection.set_virtual_size(0);                 // avoid growing it on the second pass
+            rebuild_imports(*pe, imports, moddedSection, settings);
+        }
+
+        // rebuild_pe() writes the last section's SizeOfRawData from the actual raw
+        // data length, so pad it to FileAlignment to keep the section size and the
+        // resulting file aligned.
+        auto&      rawData       = moddedSection.get_raw_data();
+        const auto fileAlignment = pe->get_file_alignment();
+        rawData.resize((rawData.size() + fileAlignment - 1) / fileAlignment * fileAlignment, 0);
 
 
         // Calculate new checksum
@@ -232,7 +251,7 @@ int main(int argc, char** argv) {
     }
 
     logger->info("Configurations:");
-    logger->info("\tBDS Executable File: \t\t[{}]", getPathUtf8(config::bdsExePath.wstring()));
+    logger->info("\tMinecraft Executable File: \t\t[{}]", getPathUtf8(config::bdsExePath.wstring()));
     logger->info("\tOutput Dir: \t\t\t[{}]", getPathUtf8(config::outputDir.wstring()));
     logger->info("Targets:");
     logger->info("\tModified Executable: \t\t[{}]", config::genModdedBds);
