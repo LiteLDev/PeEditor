@@ -1,0 +1,31 @@
+format = 4
+id = "github.com/LiteLDev/PeEditor"
+version = "3.9.3"
+
+[info]
+name = "PeEditor"
+description = "A tool to inject PreLoader to Minecraft Bedrock Edition"
+tags = []
+
+# PeEditor is a dependency of LeviLamina on both sides: the server entry of LeviLamina runs
+# PeEditor.exe to generate bedrock_server_mod.exe, and its client entry runs it to patch
+# Minecraft.Windows.exe in place. The same executable serves both, so the default variant has
+# one entry per side.
+
+[[variants.""]]
+side = "server"
+platform = "win-x64"
+
+[[variants."".assets]]
+type = "zip"
+urls = ["https://{{id}}/releases/download/v{{version}}/peeditor-windows-x64.zip"]
+place = [{ src = "PeEditor.exe", dest = "PeEditor.exe" }]
+
+[[variants.""]]
+side = "client"
+platform = "win-x64"
+
+[[variants."".assets]]
+type = "zip"
+urls = ["https://{{id}}/releases/download/v{{version}}/peeditor-windows-x64.zip"]
+place = [{ src = "PeEditor.exe", dest = "PeEditor.exe" }]
